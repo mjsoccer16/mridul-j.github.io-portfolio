@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mridul's World — Portfolio RPG v5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;image-rendering:pixelated;}
+body{background:#06061a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Press Start 2P',monospace;overflow:hidden;}
+
+#title-screen{position:fixed;inset:0;background:linear-gradient(160deg,#04041a 0%,#0c0630 60%,#04041a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:22px;}
+.title-logo{text-align:center;}
+.title-logo h1{font-size:26px;color:#f8e800;text-shadow:0 0 24px #f8e80099,4px 4px 0 #a07800;animation:tPulse 2.5s ease-in-out infinite;letter-spacing:3px;line-height:1.7;}
+.title-logo h2{font-size:9px;color:#78c8f8;margin-top:10px;letter-spacing:1px;}
+.title-logo p{font-size:6px;color:#80c880;margin-top:8px;}
+@keyframes tPulse{0%,100%{text-shadow:0 0 10px #f8e80033,4px 4px 0 #a07800;}50%{text-shadow:0 0 36px #f8e800bb,4px 4px 0 #a07800;}}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.ps{font-size:10px;color:#fff;}
+.hints{font-size:6px;color:#555;text-align:center;line-height:3;max-width:380px;}
+.hints span{color:#888;}
+
+#game-wrapper{display:none;flex-direction:column;align-items:center;gap:4px;}
+#hud{width:544px;display:flex;justify-content:space-between;align-items:center;padding:5px 12px;background:#080818;border:2px solid #222250;border-radius:3px;}
+#hud .zn{font-size:7px;color:#f8e800;}
+#hud .hi{font-size:5px;color:#444;}
+#canvas-container{border:3px solid #222250;box-shadow:0 0 40px rgba(80,140,255,0.18);}
+canvas{display:block;}
+
+/* Dialogue */
+#dlg{display:none;width:544px;background:#f2f2fa;border:4px solid #181838;border-radius:4px;padding:13px 16px 18px;position:relative;box-shadow:5px 5px 0 #000;}
+#dlg::before{content:'';position:absolute;inset:5px;border:2px solid #9898c0;border-radius:2px;pointer-events:none;}
+#dlg-spk{font-size:8px;color:#00008a;margin-bottom:7px;border-bottom:2px solid #c0c0d8;padding-bottom:5px;}
+#dlg-txt{font-size:8px;color:#10101e;line-height:2.3;min-height:54px;}
+#dlg-cont{position:absolute;bottom:8px;right:12px;font-size:7px;color:#00008a;animation:blink .7s step-end infinite;}
+
+/* Sign board */
+#sgn{display:none;width:544px;background:#0c0c26;border:4px solid #f8e800;border-radius:4px;padding:13px 16px 18px;position:relative;box-shadow:5px 5px 0 #a07800;}
+#sgn::before{content:'';position:absolute;inset:5px;border:1px solid #f8e80030;border-radius:2px;pointer-events:none;}
+#sgn-ttl{font-size:8px;color:#f8e800;margin-bottom:9px;border-bottom:1px solid #f8e80040;padding-bottom:5px;}
+#sgn-txt{font-size:7px;color:#d4d4ee;line-height:2.6;white-space:pre-line;}
+#sgn-cls{position:absolute;bottom:8px;right:12px;font-size:6px;color:#f8e800;animation:blink .9s step-end infinite;}
+
+/* CTA Gate overlay */
+#cta-screen{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:0;}
+#cta-inner{background:linear-gradient(160deg,#0c0830 0%,#180c40 50%,#0c0830 100%);border:4px solid #f8e800;border-radius:8px;padding:28px 36px 24px;text-align:center;max-width:520px;box-shadow:0 0 60px #f8e80044,0 0 120px #f8e80011;}
+#cta-inner h2{font-size:14px;color:#f8e800;text-shadow:0 0 20px #f8e80088;margin-bottom:6px;line-height:1.8;}
+#cta-inner p{font-size:7px;color:#b0b0e0;line-height:2.5;margin-bottom:18px;}
+.cta-btn{display:inline-block;font-family:'Press Start 2P',monospace;font-size:7px;background:#f8e800;color:#0c0830;border:none;padding:10px 20px;cursor:pointer;border-radius:3px;margin:4px;letter-spacing:1px;}
+.cta-btn:hover{background:#fff;color:#000;}
+.cta-btn.outline{background:transparent;color:#f8e800;border:2px solid #f8e800;}
+.cta-btn.outline:hover{background:#f8e80020;}
+#cta-close{margin-top:16px;font-size:6px;color:#555;cursor:pointer;text-decoration:underline;}
+#cta-close:hover{color:#888;}
+
+/* Mini-game container */
+#mg-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+#mg-modal{background:#0a0a1e;border:3px solid #60a0ff;border-radius:8px;padding:14px 16px 12px;text-align:center;box-shadow:0 0 40px rgba(60,120,255,0.25);max-width:680px;width:98vw;}
+#mg-modal h3{font-size:9px;color:#80c0ff;margin-bottom:3px;}
+#mg-sub{font-size:6px;color:#5080a0;margin-bottom:8px;}
+#mg-canvas{display:block;margin:0 auto;border:2px solid #304080;border-radius:3px;max-width:100%;}
+#mg-status{font-size:7px;color:#a0d0ff;margin-top:6px;min-height:18px;line-height:2;}
+#mg-score-row{display:flex;justify-content:center;gap:16px;margin-top:4px;}
+.mg-box{font-size:7px;color:#f8e800;background:#080820;border:1px solid #304080;padding:4px 10px;border-radius:2px;}
+#mg-btns{display:flex;gap:10px;justify-content:center;margin-top:8px;}
+.mg-btn{font-family:'Press Start 2P',monospace;font-size:7px;background:#60a0ff;color:#000;border:none;padding:8px 14px;cursor:pointer;border-radius:3px;}
+.mg-btn:hover{background:#a0d0ff;}
+.mg-btn.alt{background:#f8e800;color:#0a0a1e;}
+.mg-btn.alt:hover{background:#fff;}
+
+#cpanel{width:544px;display:flex;justify-content:space-between;font-size:5px;color:#2a2a2a;padding:2px 8px;}
+
+/* Progress tracker */
+#progress-bar{width:544px;display:flex;align-items:center;gap:6px;padding:2px 12px;background:#060612;border:1px solid #1a1a40;border-radius:2px;}
+#progress-bar .lbl{font-size:5px;color:#f8e800;}
+#progress-bar .bar{flex:1;height:6px;background:#0c0c20;border:1px solid #222250;border-radius:3px;overflow:hidden;}
+#progress-bar .fill{height:100%;background:linear-gradient(90deg,#f8e800,#40e060);border-radius:3px;transition:width 0.5s ease;}
+#progress-bar .pct{font-size:5px;color:#80c880;min-width:80px;text-align:right;}
+
+/* Minimap */
+#minimap{position:fixed;bottom:12px;right:12px;border:2px solid #f8e800;border-radius:4px;box-shadow:0 0 12px rgba(248,232,0,0.2);z-index:50;cursor:pointer;image-rendering:pixelated;background:#06061a;}
+#minimap.hidden{display:none;}
+#mm-toggle{position:fixed;bottom:12px;right:12px;z-index:51;font-family:'Press Start 2P',monospace;font-size:6px;background:#0c0c26;color:#f8e800;border:1px solid #f8e800;padding:4px 8px;cursor:pointer;border-radius:3px;}
+#mm-toggle:hover{background:#1a1a40;}
+
+/* Mobile D-Pad */
+#dpad{display:none;position:fixed;bottom:20px;left:20px;z-index:60;width:140px;height:140px;}
+.dpad-btn{position:absolute;width:44px;height:44px;background:rgba(248,232,0,0.15);border:2px solid rgba(248,232,0,0.4);border-radius:8px;color:#f8e800;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
+.dpad-btn:active{background:rgba(248,232,0,0.4);}
+#dpad-up{left:48px;top:0;}
+#dpad-down{left:48px;bottom:0;}
+#dpad-left{left:0;top:48px;}
+#dpad-right{right:0;top:48px;}
+#dpad-action{position:fixed;bottom:40px;right:80px;z-index:60;width:56px;height:56px;background:rgba(248,232,0,0.2);border:2px solid rgba(248,232,0,0.5);border-radius:50%;color:#f8e800;font-size:24px;display:none;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
+#dpad-action:active{background:rgba(248,232,0,0.5);}
+
+/* Particle canvas overlay */
+#particles{position:fixed;inset:0;pointer-events:none;z-index:1;}
+
+/* Character Creator */
+#char-creator{display:none;position:fixed;inset:0;background:linear-gradient(160deg,#04041a 0%,#0c0630 60%,#04041a 100%);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#char-creator h2{font-size:14px;color:#f8e800;text-shadow:0 0 18px #f8e80066;letter-spacing:2px;}
+#char-creator .cc-sub{font-size:7px;color:#78c8f8;margin-bottom:4px;}
+#cc-preview{border:3px solid #222250;border-radius:4px;background:#06061a;box-shadow:0 0 30px rgba(80,140,255,0.15);image-rendering:pixelated;}
+#cc-name-row{display:flex;align-items:center;gap:10px;}
+#cc-name-row label{font-size:7px;color:#f8e800;}
+#cc-name{font-family:'Press Start 2P',monospace;font-size:8px;background:#0c0c26;color:#f8e800;border:2px solid #f8e800;padding:8px 14px;border-radius:3px;width:200px;text-align:center;outline:none;}
+#cc-name:focus{border-color:#78c8f8;box-shadow:0 0 12px rgba(120,200,248,0.3);}
+#cc-name::placeholder{color:#555;}
+.cc-option-group{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.cc-option-group .cc-label{font-size:6px;color:#b0b0e0;letter-spacing:1px;}
+.cc-swatches{display:flex;gap:8px;}
+.cc-swatch{width:28px;height:28px;border:3px solid #222250;border-radius:4px;cursor:pointer;transition:border-color 0.15s,transform 0.15s,box-shadow 0.15s;}
+.cc-swatch:hover{transform:scale(1.15);}
+.cc-swatch.selected{border-color:#f8e800;box-shadow:0 0 10px rgba(248,232,0,0.4);transform:scale(1.15);}
+#cc-go{font-family:'Press Start 2P',monospace;font-size:9px;background:#f8e800;color:#0c0830;border:none;padding:12px 28px;cursor:pointer;border-radius:4px;margin-top:8px;letter-spacing:1px;}
+#cc-go:hover{background:#fff;}
+#cc-go:disabled{background:#444;color:#888;cursor:not-allowed;}
+
+/* CTA Zone Lock Overlay (drawn on canvas) — no extra CSS needed */
+/* Unlock popup notification */
+#unlock-popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:linear-gradient(160deg,#0c0830 0%,#180c40 50%,#0c0830 100%);border:4px solid #40e060;border-radius:8px;padding:24px 32px;text-align:center;box-shadow:0 0 60px rgba(64,224,96,0.3),0 0 120px rgba(64,224,96,0.1);animation:unlockPop 0.4s ease-out;}
+@keyframes unlockPop{0%{transform:translate(-50%,-50%) scale(0.7);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+#unlock-popup h3{font-size:11px;color:#40e060;text-shadow:0 0 16px #40e06088;margin-bottom:8px;line-height:1.8;}
+#unlock-popup p{font-size:7px;color:#b0e0c0;line-height:2.5;margin-bottom:14px;}
+#unlock-popup button{font-family:'Press Start 2P',monospace;font-size:7px;background:#40e060;color:#0c0830;border:none;padding:10px 20px;cursor:pointer;border-radius:3px;}
+#unlock-popup button:hover{background:#80ff90;}
+
+/* Audio toggle */
+#audio-toggle{position:fixed;top:12px;right:12px;z-index:60;font-family:'Press Start 2P',monospace;font-size:7px;background:rgba(12,12,38,0.8);color:#f8e800;border:1px solid #f8e800;padding:6px 10px;cursor:pointer;border-radius:3px;backdrop-filter:blur(4px);}
+#audio-toggle:hover{background:rgba(24,24,60,0.9);}
+
+/* Responsive canvas */
+@media (max-width:580px){
+  #hud,#dlg,#sgn,#cpanel,#progress-bar{width:100vw;max-width:100vw;}
+  canvas#gameCanvas{width:100vw!important;height:auto!important;}
+  #canvas-container{width:100vw;}
+  #dpad,#dpad-action{display:flex;}
+  #minimap{bottom:170px;}
+  #mm-toggle{bottom:170px;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen">
+  <div class="title-logo">
+    <h1>MRIDUL'S<br>WORLD</h1>
+    <h2>A Portfolio Adventure</h2>
+    <p>★ v5.0 ★ Senior Manager Edition ★</p>
+  </div>
+  <div class="ps blink">▶ PRESS ENTER OR TAP TO START</div>
+  <div class="hints">
+    <span>ARROW KEYS / WASD</span> move &nbsp;|&nbsp; <span>ENTER / SPACE</span> interact<br>
+    <span>★</span> Talk to characters &nbsp;|&nbsp; <span>📋</span> Info boards &nbsp;|&nbsp; <span>🎮</span> Mini-games<br>
+    Start at <span>Welcome Plaza</span> · Finish at <span>"WHAT YOU CAN DO NOW!"</span>
+  </div>
+</div>
+
+<!-- CHARACTER CREATOR -->
+<div id="char-creator">
+  <h2>CREATE YOUR CHARACTER</h2>
+  <div class="cc-sub">Who's visiting Mridul's World today?</div>
+  <canvas id="cc-preview" width="128" height="160"></canvas>
+  <div id="cc-name-row">
+    <label>NAME</label>
+    <input type="text" id="cc-name" placeholder="Your name..." maxlength="12" autocomplete="off">
+  </div>
+  <div class="cc-option-group">
+    <div class="cc-label">HAIR COLOR</div>
+    <div class="cc-swatches" id="hair-swatches"></div>
+  </div>
+  <div class="cc-option-group">
+    <div class="cc-label">OUTFIT COLOR</div>
+    <div class="cc-swatches" id="outfit-swatches"></div>
+  </div>
+  <button id="cc-go" disabled>▶ ENTER WORLD</button>
+</div>
+
+<!-- UNLOCK POPUP -->
+<div id="unlock-popup">
+  <h3>🔓 ZONE UNLOCKED!</h3>
+  <p>You've completed 5 conversations!<br>The ✨ WHAT YOU CAN DO NOW! ✨ zone<br>is now open to explore.</p>
+  <button onclick="closeUnlockPopup()">▶ AWESOME, LET'S GO!</button>
+</div>
+
+<!-- GAME -->
+<div id="game-wrapper">
+  <div id="hud">
+    <span class="zn" id="zone-label">🗺 Mridul's World</span>
+    <span class="hi">ARROWS/WASD · ENTER=interact · ESC=close</span>
+  </div>
+  <div id="canvas-container">
+    <canvas id="gameCanvas" width="544" height="432"></canvas>
+  </div>
+  <div id="dlg">
+    <div id="dlg-spk">???</div>
+    <div id="dlg-txt"></div>
+    <div id="dlg-cont">▼ ENTER to continue</div>
+  </div>
+  <div id="sgn">
+    <div id="sgn-ttl">📋 INFO</div>
+    <div id="sgn-txt"></div>
+    <div id="sgn-cls">▼ ENTER or ESC to close</div>
+  </div>
+  <div id="cpanel">
+    <span>↑↓←→ / WASD MOVE</span><span>ENTER / SPACE INTERACT</span><span>ESC CLOSE</span>
+  </div>
+  <div id="progress-bar">
+    <span class="lbl">★ PROGRESS</span>
+    <div class="bar"><div class="fill" id="prog-fill" style="width:0%"></div></div>
+    <span class="pct" id="prog-pct">0%</span>
+  </div>
+</div>
+
+<!-- CTA GATE -->
+<div id="cta-screen">
+  <div id="cta-inner">
+    <h2>✨ WHAT YOU CAN<br>DO NOW! ✨</h2>
+    <p>You've explored Mridul's World.<br>Now the real adventure begins.</p>
+    <div style="margin:14px 0;border-top:1px solid #f8e80030;padding-top:14px;">
+      <div style="font-size:7px;color:#f8e800;margin-bottom:10px;">📬 REACH OUT DIRECTLY</div>
+      <div style="font-size:7px;color:#d0d0f0;line-height:3;">
+        LinkedIn: <span style="color:#78c8f8;">mridul-jammalamadaka-311941173</span><br>
+        Email: <span style="color:#78c8f8;">mriduljammalamadaka@gmail.com</span><br>
+        Phone: <span style="color:#78c8f8;">(408) 309-5269</span>
+      </div>
+    </div>
+    <div style="margin:14px 0;border-top:1px solid #f8e80030;padding-top:14px;">
+      <div style="font-size:7px;color:#f8e800;margin-bottom:10px;">🎯 ROLES MRIDUL IS TARGETING</div>
+      <div style="font-size:7px;color:#d0d0f0;line-height:3;">
+        Sr. Product Marketing Manager &nbsp;|&nbsp; Product Marketing Manager<br>
+        Senior Product Manager &nbsp;|&nbsp; Operations Manager &nbsp;|&nbsp; Sr. GTM Manager
+      </div>
+    </div>
+    <button class="cta-btn" onclick="window.open('https://www.linkedin.com/in/mridul-jammalamadaka-311941173/','_blank')">💼 OPEN LINKEDIN</button>
+    <button class="cta-btn" onclick="window.location.href='mailto:mriduljammalamadaka@gmail.com'">📧 SEND EMAIL</button>
+    <button class="cta-btn outline" onclick="closeCTA()">◀ KEEP EXPLORING</button>
+  </div>
+</div>
+
+<!-- MINI-GAME OVERLAY -->
+<div id="mg-overlay">
+  <div id="mg-modal">
+    <h3 id="mg-title">GAME</h3>
+    <div id="mg-sub"></div>
+    <canvas id="mg-canvas" width="480" height="300"></canvas>
+    <div id="mg-status"></div>
+    <div id="mg-score-row">
+      <div class="mg-box" id="mg-s1">—</div>
+      <div class="mg-box" id="mg-s2">—</div>
+    </div>
+    <div id="mg-btns">
+      <button class="mg-btn alt" id="mg-restart-btn">↺ RESTART</button>
+      <button class="mg-btn" onclick="closeMG()">✕ BACK TO WORLD</button>
+    </div>
+  </div>
+</div>
+
+<!-- MINIMAP -->
+<canvas id="minimap" width="108" height="90" class="hidden"></canvas>
+<button id="mm-toggle" onclick="toggleMinimap()">🗺 MAP</button>
+
+<!-- MOBILE D-PAD -->
+<div id="dpad">
+  <div class="dpad-btn" id="dpad-up">▲</div>
+  <div class="dpad-btn" id="dpad-down">▼</div>
+  <div class="dpad-btn" id="dpad-left">◄</div>
+  <div class="dpad-btn" id="dpad-right">►</div>
+</div>
+<div id="dpad-action">👆</div>
+
+<!-- PARTICLE OVERLAY -->
+<canvas id="particles"></canvas>
+
+<!-- AUDIO TOGGLE -->
+<button id="audio-toggle" style="display:none;" onclick="toggleAudio()">🔊 SFX</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// MRIDUL'S WORLD v4
+// ═══════════════════════════════════════════════════════════════════
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+
+// Palette
+const P={
+  gA:'#7fa04e',gB:'#719044',         // grass
+  road:'#181818',roadL:'#282828',roadM:'#d8b830',
+  water:'#2058c0',waterB:'#3070d8',
+  trTrunk:'#7a4010',
+  trTeal:'#20907a',trTealD:'#1a7060',   // normal trees
+  trPink:'#e05090',trPinkD:'#b02870',   // NUCB
+  trPurp:'#7050e0',trPurpD:'#5030b0',  // Future
+  trBlue:'#4060e0',trBlueD:'#2040a0',  // Connect
+  trGold:'#c0a030',trGoldD:'#906018',  // Welcome
+  sand:'#ddd080',sandD:'#c8c060',
+  boardF:'#0e0e30',boardB:'#f8e800',
+  flwP:'#f050a0',flwY:'#f0c820',
+  head:'#f0c870',eye:'#201008',
+  shadow:'rgba(0,0,0,0.28)',
+  pBody:'#d83808',
+};
+
+const TILE=32,MAP_W=36,MAP_H=30;
+const T={GRASS:1,ROAD:2,WATER:3,TREE:4,SAND:6,FLOWER:7,BRIDGE:8,KIOSK:9,
+         SOCCER:10,GOAL:11,WELCOME:12,CONNECT:13,CTA:14,BARRIER:15};
+
+// ── CTA ZONE LOCK STATE ──────────────────────────────────────────
+const CTA_UNLOCK_THRESHOLD=5;
+let ctaUnlocked=false;
+let unlockShown=false;
+
+// ── PLAYER CUSTOMIZATION ─────────────────────────────────────────
+const HAIR_COLORS=['#f0e040','#e05020','#20c8e0','#e848e0','#e0e0e0'];
+const HAIR_LABELS=['Blonde','Red','Cyan','Pink','Silver'];
+const OUTFIT_COLORS=['#e03030','#2888ff','#20c860','#f080d0','#f8a020'];
+const OUTFIT_LABELS=['Red','Blue','Green','Pink','Orange'];
+let playerName='YOU';
+let playerHairColor='#280800';
+let playerOutfitColor='#d83808';
+
+// ── SIGN DATA ─────────────────────────────────────────────────────
+const SIGN_DATA={
+  '2,3':{title:'👋 WELCOME TO MRIDUL\'S WORLD',lines:[
+    'Hi — I\'m Mridul Jammalamadaka.',
+    'This world tells my professional story.',
+    '','Explore 5 zones → talk to characters',
+    'Read info boards (📋) → play mini-games (🎮)',
+    '','🏫 SJSU Campus      🎓 NUCB Nagoya',
+    '🏢 Career District  ⚽ Life & Hobbies',
+    '🚀 Future City','',
+    'Finish at "WHAT YOU CAN DO NOW!" ✨',
+  ]},
+  '4,3':{title:'🗺 MAP GUIDE',lines:[
+    'Black roads connect all zones.',
+    'Follow the road south to explore!',
+    '','★ pulsing yellow = character to talk to',
+    '📋 gold board = info to read',
+    '🎮 glowing tile = mini-game trigger',
+    '','After talking to someone, their ★ becomes ✓',
+    'Try to collect all ✓ marks!',
+  ]},
+  '5,8':{title:'🏫 SAN JOSE STATE UNIVERSITY',lines:[
+    'B.S. Management Information Systems',
+    'Graduated: May 2021  |  Dean\'s Scholar',
+    '','★ Active in Akbayan Filipino Cultural Club',
+    '★ SQL · Python · HTML · RDBMS · Analytics',
+    '★ AI Development on IBM Cloud',
+    '','Core belief formed here:',
+    '"Technology must serve people."',
+    'Translating tech → business value',
+    'became Mridul\'s professional edge.',
+  ]},
+  '6,8':{title:'🏫 SJSU — TECH STACK ORIGINS',lines:[
+    'Technical: SQL · Python · HTML · RDBMS',
+    'Analytics: Tableau · Data Modeling',
+    'Business: MIS · Strategy · Communication',
+    '','First exposure to enterprise MarTech:',
+    'Adobe Experience Cloud · Salesforce',
+    '','He was exploring tools others',
+    'hadn\'t heard of yet. Always ahead.',
+  ]},
+  '15,8':{title:'🎓 NUCB BUSINESS SCHOOL, NAGOYA',lines:[
+    'MBA — Graduated: September 2023',
+    'Nagoya Univ. of Commerce & Business',
+    '','★ Bell Curve: only 70% pass each term',
+    '★ 25-country global cohort',
+    '★ Thesis: Microsoft\'s $69B Activision deal',
+    '★ Japanese improved to N3 level here',
+    '★ Full cultural immersion in Japan',
+  ]},
+  '16,8':{title:'🎓 THE BELL CURVE',lines:[
+    'Every term: 30% of the class failed.',
+    '','Intense? Yes. Unhealthy at times? Yes.',
+    'Character-building? Absolutely.',
+    '','Mridul didn\'t just pass.',
+    'He finished strong.',
+    '','That composure under pressure shows up',
+    'in every launch, every deadline,',
+    'every high-stakes stakeholder meeting.',
+  ]},
+  '26,8':{title:'🏢 CAREER DISTRICT — OVERVIEW',lines:[
+    '★ Adobe Inc (2017–2019)',
+    '   Campaign Marketing Solutions Consultant',
+    '','★ JMT Worldwide (2020–2024)',
+    '   Product Manager / PMM Lead',
+    '','★ DataFinity/Adobe B2B (2024–Now)',
+    '   Technical Marketing Ops Manager',
+    '','★ Fintech Advisory (2024–Now)',
+    '   Independent Consultant',
+    '','Talk to characters at each stand →',
+  ]},
+  '5,18':{title:'⚽ SJ EARTHQUAKES PDA ACADEMY',lines:[
+    'Mridul trained with the San Jose',
+    'Earthquakes PDA Academy in high school —',
+    'one of the most elite youth programs in the US.',
+    '','★ Tried out at professional clubs abroad',
+    '★ Still plays and competes today',
+    '★ Built his own team from scratch',
+    '','Captain. Coach. Player.',
+    'He manages the full org.',
+  ]},
+  '5,23':{title:'⚽ LEADERSHIP ON THE FIELD',lines:[
+    'Building a team from zero taught Mridul',
+    'what no classroom could:',
+    '','★ Recruiting & selecting people',
+    '★ Scheduling and logistics at scale',
+    '★ Real-time tactics & coaching',
+    '★ Building culture and trust',
+    '★ Conflict resolution under fire',
+    '','Leadership in action — before any',
+    'org chart said he was in charge.',
+  ]},
+  '2,25':{title:'🌐 LANGUAGES & CROSS-CULTURAL FLUENCY',lines:[
+    '★ English ——————— Fluent',
+    '★ Japanese ————— N3 Level (conversational)',
+    '★ Hindi ——————— Fluent',
+    '★ Spanish ————— Beginner',
+    '★ Bengali ————— Beginner',
+    '','Five languages. Three continents.',
+    'Essential for managing campaigns across',
+    'APAC, EMEA, and North America.',
+  ]},
+  '13,25':{title:'🤝 NETWORKING & HUMAN CONNECTION',lines:[
+    'One of Mridul\'s deepest values:',
+    'genuine connection — not card collecting.',
+    '','He listens. He learns. He follows up.',
+    '','Interested in connecting?',
+    'Head to "WHAT YOU CAN DO NOW!" →',
+    'Walk through the gate to the south-east.',
+  ]},
+  '20,21':{title:'🚀 TARGET ROLES — IMMEDIATE',lines:[
+    'Mridul is actively seeking:',
+    '','★ Senior Product Marketing Manager',
+    '★ Product Marketing Manager',
+    '★ Senior Product Manager',
+    '★ Operations Manager',
+    '★ Senior GTM / Strategy Manager',
+    '','What he brings (rare combo):',
+    '→ AEP · AJO · Marketo · SFDC · SQL',
+    '→ $740K ARR with 12% YoY growth',
+    '→ 50+ campaigns, 12 global markets',
+  ]},
+  '25,21':{title:'🚀 LONG-TERM VISION',lines:[
+    'Long-term: People Leadership.',
+    '','Build. Motivate. Grow.',
+    '','★ Develop and retain talent',
+    '★ Build high-performance culture',
+    '★ Lead global cross-functional teams',
+    '','He\'s already doing this on the pitch.',
+    'Now he wants to do it at scale.',
+  ]},
+};
+
+// ── MAP ───────────────────────────────────────────────────────────
+const rawMap=[];
+for(let y=0;y<MAP_H;y++){rawMap.push([]);for(let x=0;x<MAP_W;x++)rawMap[y].push(T.GRASS);}
+function sT(x,y,t){if(x>=0&&x<MAP_W&&y>=0&&y<MAP_H)rawMap[y][x]=t;}
+function fl(x1,y1,x2,y2,t){for(let y=y1;y<=y2;y++)for(let x=x1;x<=x2;x++)sT(x,y,t);}
+
+// Welcome Plaza
+fl(0,0,7,5,T.WELCOME);fl(0,5,7,6,T.ROAD);
+sT(2,3,T.KIOSK);sT(4,3,T.KIOSK);
+[[0,0],[7,0],[0,4],[7,4]].forEach(([x,y])=>sT(x,y,T.TREE));
+[[1,2],[3,2],[5,2],[6,2]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+
+// Main H-road row 7
+fl(0,7,35,7,T.ROAD);
+
+// Zone 1: SJSU (0-9, 8-16)
+fl(0,8,9,16,T.GRASS);fl(4,8,4,16,T.ROAD);fl(0,12,9,12,T.ROAD);
+[[0,8],[9,8],[0,13],[9,13],[0,16],[9,16],[5,14],[8,14]].forEach(([x,y])=>sT(x,y,T.TREE));
+sT(5,8,T.KIOSK);sT(6,8,T.KIOSK);
+[[1,9],[3,9],[6,9],[8,9],[1,13],[3,13],[6,13],[8,13]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+fl(6,14,8,16,T.WATER);sT(5,15,T.BRIDGE);
+
+// Zone 2: NUCB (10-21, 8-16)
+fl(10,8,21,16,T.GRASS);fl(15,8,15,16,T.ROAD);fl(10,12,21,12,T.ROAD);
+[[10,8],[21,8],[10,13],[21,13],[10,16],[21,16],[16,15],[17,15]].forEach(([x,y])=>sT(x,y,T.TREE));
+sT(15,8,T.KIOSK);sT(16,8,T.KIOSK);
+[[11,9],[13,9],[17,9],[19,9],[11,13],[13,13],[17,13],[19,13]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+fl(18,13,20,16,T.WATER);
+
+// Zone 3: Career (22-35, 8-16)
+fl(22,8,35,16,T.GRASS);fl(28,8,28,16,T.ROAD);fl(22,12,35,12,T.ROAD);
+[[22,8],[35,8],[22,13],[35,13],[22,16],[35,16],[29,14],[32,14]].forEach(([x,y])=>sT(x,y,T.TREE));
+sT(27,8,T.KIOSK);
+[[23,9],[25,9],[29,9],[31,9],[23,13],[25,13],[30,13],[32,13]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+
+// Zone divider roads
+fl(9,8,10,16,T.ROAD);fl(21,8,22,16,T.ROAD);
+
+// Main H-road row 17
+fl(0,17,35,17,T.ROAD);
+
+// Zone 4: Life & Hobbies (0-16, 18-27)
+fl(0,18,16,27,T.GRASS);
+fl(2,19,10,26,T.SAND);
+sT(6,19,T.GOAL);sT(6,26,T.GOAL);
+sT(5,18,T.KIOSK);sT(5,23,T.KIOSK);
+sT(6,22,T.SOCCER);
+[[0,18],[0,23],[0,27],[11,18],[11,23],[11,27],[16,18],[16,23],[16,27]].forEach(([x,y])=>sT(x,y,T.TREE));
+fl(12,20,15,22,T.WATER);sT(11,21,T.BRIDGE);
+sT(2,25,T.KIOSK);sT(13,25,T.KIOSK);
+[[13,25],[14,25]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+
+// Zone 5: Future City (17-27, 18-27)
+fl(17,18,27,27,T.GRASS);
+fl(17,22,27,22,T.ROAD);fl(17,27,27,27,T.ROAD);
+fl(21,18,21,27,T.ROAD);fl(26,18,26,27,T.ROAD);
+[[17,18],[27,18],[17,28],[27,28],[22,18],[22,23]].forEach(([x,y])=>sT(x,y,T.TREE));
+sT(20,22,T.KIOSK);sT(25,22,T.KIOSK);
+[[18,19],[19,19],[18,24],[19,24],[23,19],[24,19],[23,24],[24,24]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+
+// Zone divider roads bottom
+fl(16,18,17,27,T.ROAD);fl(27,18,28,27,T.ROAD);
+
+// CTA zone (30-35, 20-26) — "WHAT YOU CAN DO NOW!" (smaller)
+fl(29,18,35,27,T.GRASS); // fill the old CTA area with grass first
+fl(30,20,35,26,T.CTA);
+fl(30,23,35,23,T.ROAD);
+fl(33,20,33,26,T.ROAD);
+[[30,20],[35,20],[30,26],[35,26]].forEach(([x,y])=>sT(x,y,T.TREE));
+[[31,21],[32,21],[34,21],[31,25],[32,25],[34,25]].forEach(([x,y])=>sT(x,y,T.FLOWER));
+// Barrier wall at CTA entrance (column 29, rows 20-26) — blocks until unlocked
+for(let by=20;by<=26;by++)sT(29,by,T.BARRIER);
+
+// Bottom road
+fl(0,28,35,28,T.ROAD);
+
+// ── ZONES ─────────────────────────────────────────────────────────
+const ZONES=[
+  {name:'👋 Welcome Plaza',  x1:0, y1:0, x2:7, y2:6},
+  {name:'🏫 SJSU Campus',   x1:0, y1:8, x2:9, y2:16},
+  {name:'🎓 NUCB Nagoya',   x1:10,y1:8, x2:21,y2:16},
+  {name:'🏢 Career District',x1:22,y1:8, x2:35,y2:16},
+  {name:'⚽ Life & Hobbies', x1:0, y1:18,x2:16,y2:27},
+  {name:'🚀 Future City',   x1:17,y1:18,x2:27,y2:27},
+  {name:'✨ WHAT YOU CAN DO NOW!',x1:30,y1:20,x2:35,y2:26},
+];
+
+// ── NPC STAND DEFINITIONS ─────────────────────────────────────────
+// Each has: unique standStyle (controls how it's drawn), contrasting charColor vs headColor
+const NPCS=[
+  // Welcome
+  {id:'guide', x:3.5,y:2.5, talked:false,
+   standStyle:'arch',    // green arch booth
+   standColor:'#204820',standAccent:'#40c060',standRoof:'#207840',
+   charColor:'#e8d060',  charHead:'#60c080',  // gold body, teal head contrast
+   name:'World Guide',emoji:'🌟',
+   dlg:["Welcome to Mridul's World! I'm your guide.",
+    "Mridul is a Product Marketing & GTM professional with 7+ years in B2B SaaS, MarTech, and Fintech.",
+    "Explore 5 zones to discover his education, career, skills, passions, and ambitions.",
+    "Talk to characters (★), read info boards (📋), and play mini-games (🎮)!",
+    "Head south through the main road. Finish at the ✨ WHAT YOU CAN DO NOW! zone in the bottom-right!"]},
+
+  // SJSU
+  {id:'prof1', x:2.5,y:10.5, talked:false,
+   standStyle:'lectern',  // wooden lecture stand
+   standColor:'#8B4513',standAccent:'#d4a044',standRoof:'#c0880c',
+   charColor:'#2050e0',  charHead:'#f0c870',
+   name:'Prof. Rodriguez',emoji:'📚',
+   dlg:["Welcome to San Jose State University! Mridul earned his B.S. in Management Information Systems in May 2021.",
+    "Dean's Scholar — one of SJSU's highest academic honors. Also active in the Akbayan Filipino Cultural Club.",
+    "His superpower started here: translating complex technical systems into clear, actionable business value.",
+    "That bridge-building skill became the foundation of every role he's held since."]},
+  {id:'alex', x:7.5,y:10.5, talked:false,
+   standStyle:'desk',     // orange desk booth
+   standColor:'#b06010',standAccent:'#f0a030',standRoof:'#d07820',
+   charColor:'#2888d0',  charHead:'#f0c870',
+   name:'Classmate Alex',emoji:'🧑‍💻',
+   dlg:["Mridul was always explaining SQL to the whole class while thinking about the business case behind it.",
+    "He had the full MIS toolkit — Python, SQL, RDBMS — but never lost sight of why tech exists: to serve people.",
+    "He was already diving into MarTech platforms while the rest of us were still figuring out pivot tables."]},
+
+  // NUCB
+  {id:'sensei', x:12.5,y:10.5, talked:false,
+   standStyle:'torii',    // red Japanese arch style
+   standColor:'#a01010',standAccent:'#e04040',standRoof:'#801010',
+   charColor:'#e04040',  charHead:'#f8d8a0',
+   name:'Sensei Tanaka',emoji:'⛩️',
+   dlg:["Irasshaimase! Mridul earned his MBA at NUCB Business School in Nagoya, Japan, graduating September 2023.",
+    "Our program uses a strict bell curve — only 70% pass each term. The academic pressure is extraordinary.",
+    "His thesis analyzed Microsoft's $69B Activision acquisition — strategic positioning in tech markets. Excellent.",
+    "He studied with a cohort from 25 countries. His cross-cultural intelligence grew enormously here."]},
+  {id:'mbapeer', x:19.5,y:10.5, talked:false,
+   standStyle:'counter',  // pink boutique counter
+   standColor:'#901870',standAccent:'#e050b0',standRoof:'#b02888',
+   charColor:'#f060c0',  charHead:'#f0d0a0',
+   name:'MBA Classmate',emoji:'🌸',
+   dlg:["Thirty percent of the class failed every term. Brutal. But Mridul stayed composed — he almost thrived on pressure.",
+    "Watching his Japanese improve in real-time was impressive. He reached genuine N3 conversational fluency.",
+    "He always said: strategy without execution is just storytelling. That's why he bridges both worlds."]},
+
+  // Career
+  {id:'adobe_mgr', x:24.5,y:10.5, talked:false,
+   standStyle:'kiosk',    // red tech kiosk
+   standColor:'#801800',standAccent:'#e04010',standRoof:'#a02000',
+   charColor:'#e85010',  charHead:'#f0c870',
+   name:'Adobe Manager',emoji:'🔴',
+   dlg:["Mridul joined Adobe as a Campaign Marketing Solutions Consultant in 2017. Sharp from day one.",
+    "He drove end-to-end newsletter strategy for 11,000+ consumers — achieving 40% MoM open rate growth.",
+    "He connected teams across Creative, Document, and Experience Clouds, launching 20 integrated campaigns globally.",
+    "Earned Adobe Journey Optimizer AND Marketo certifications in record time. That dual credential is rare."]},
+  {id:'jmt', x:24.5,y:14.5, talked:false,
+   standStyle:'tower',    // purple tall tower stand
+   standColor:'#501090',standAccent:'#9030f0',standRoof:'#7020c0',
+   charColor:'#b040f8',  charHead:'#f0c870',
+   name:'JMT Director',emoji:'📊',
+   dlg:["Mridul led Product Management and Product Marketing at JMT Worldwide from 2020 to 2024. Exceptional run.",
+    "He delivered a CRM platform for 20,000+ financial services users generating $740K ARR with 12% YoY growth.",
+    "His customer-first approach increased platform engagement 15%. Every feature had user need + business case tied together.",
+    "He championed cross-functional alignment across Product, Engineering, Sales, Marketing — cutting time-to-market by 35%."]},
+  {id:'datafin', x:33.5,y:10.5, talked:false,
+   standStyle:'panel',    // teal tech panel
+   standColor:'#086070',standAccent:'#10b8d8',standRoof:'#0a90b0',
+   charColor:'#20d0f0',  charHead:'#f0c870',
+   name:'DataFinity Lead',emoji:'💼',
+   dlg:["Mridul is our Technical Marketing Ops Manager, running Adobe's enterprise global growth strategy.",
+    "He orchestrates campaigns across APAC, EMEA, and NA — email, in-app, SMS, web — across 50+ active campaigns.",
+    "He's the only contractor on the Adobe B2B team who kept their account open. His impact on architecture and data enablement is undeniable.",
+    "He built reusable operational frameworks that significantly accelerated time-to-value for enterprise clients."]},
+  {id:'fintech', x:33.5,y:14.5, talked:false,
+   standStyle:'vault',    // green bank vault style
+   standColor:'#0a6030',standAccent:'#20c060',standRoof:'#0a8040',
+   charColor:'#30e080',  charHead:'#f0c870',
+   name:'Fintech Partner',emoji:'💳',
+   dlg:["Alongside his full-time role, Mridul has consulted independently in Fintech and Payments since January 2024.",
+    "He built partnership strategies with 7+ merchant partners and PSPs, driving growth across 12 global markets.",
+    "Culturally-aware messaging for 5 demographics. Compliance coordination with Risk, Legal, and Operations.",
+    "The breadth: B2B SaaS, payments, fintech, enterprise commerce — all unified by GTM strategy thinking."]},
+  {id:'certs', x:28.5,y:14.5, talked:false,
+   standStyle:'trophy',   // gold trophy stand
+   standColor:'#907000',standAccent:'#f0c000',standRoof:'#c09000',
+   charColor:'#f8d800',  charHead:'#301000',  // gold body, dark head contrast
+   name:'Cert Master',emoji:'🏆',
+   dlg:["Adobe Certified: Journey Optimizer Business Practitioner. Earned fast.",
+    "Adobe Certified: Marketo Engage Business Practitioner. Also earned fast.",
+    "Full stack: AEP · AJO · Marketo · Salesforce · Dynamics 365 · SQL · Python · Tableau · HTML · APIs.",
+    "The real skill? He converts all that technical depth into executive-ready business narrative that gets acted on."]},
+
+  // Life & Hobbies
+  {id:'coach', x:4.5,y:21.5, talked:false,
+   standStyle:'bench',    // green sports bench
+   standColor:'#1a7030',standAccent:'#40e060',standRoof:'#208040',
+   charColor:'#40e060',  charHead:'#f0c870',
+   name:'Soccer Coach',emoji:'⚽',
+   dlg:["Mridul trained with the San Jose Earthquakes PDA Academy — one of the most elite youth programs in the US.",
+    "He tried out at professional clubs internationally. That same competitive drive lives in every career move.",
+    "He built his own team from scratch — captain, player, AND coach simultaneously. Full org ownership.",
+    "Recruiting, scheduling, tactics, culture, conflict resolution — all of it. Leadership before any title required it."]},
+  {id:'boat_npc', x:13.5,y:21.0, talked:false,  // ON THE WATER — drawn as boat
+   standStyle:'boat',
+   standColor:'#c07020',standAccent:'#f09030',standRoof:'#e08020',
+   charColor:'#c03018',  charHead:'#f0c870',
+   name:'Sensei Yamamoto',emoji:'🗾',
+   dlg:["Mridul speaks Japanese at N3 level — conversational and growing toward business fluency.",
+    "English and Hindi fluently. Beginner Spanish and Bengali. Five languages total.",
+    "His Nagoya years weren't just academic. He lived Japan — culture, cuisine, language, daily life — fully.",
+    "That cross-cultural fluency is invaluable managing global campaigns across APAC, EMEA, and North America."]},
+
+  // Future City
+  {id:'future', x:19.5,y:20.5, talked:false,
+   standStyle:'rocket',   // purple sci-fi rocket stand
+   standColor:'#380890',standAccent:'#8050f8',standRoof:'#5820c0',
+   charColor:'#a060ff',  charHead:'#f0e0ff',  // purple body, light head
+   name:'Future Mridul ✨',emoji:'🚀',
+   dlg:["Welcome to Future City. I'm who Mridul is becoming.",
+    "Immediate goal: Senior Product Marketing Manager, Senior Product Manager, or Operations Manager.",
+    "I bring a genuinely rare combo: deep MarTech/platform fluency (AEP, AJO, SQL, APIs) + global GTM execution.",
+    "Generated $740K ARR, managed 50+ global campaigns, kept the only contractor seat on Adobe's B2B team through results alone.",
+    "If you're building something in B2B SaaS, MarTech, or Fintech — I want to be in the room where strategy meets execution."]},
+  {id:'people', x:19.5,y:24.5, talked:false,
+   standStyle:'podium',   // gold lecture podium
+   standColor:'#806010',standAccent:'#d0a020',standRoof:'#a07818',
+   charColor:'#e0b020',  charHead:'#281000',  // gold/dark contrast
+   name:'People Leader',emoji:'👥',
+   dlg:["Long-term, Mridul's ambition: People Leadership.",
+    "Build and motivate high-performing teams. Develop talent. Create culture that compounds over time.",
+    "He's already doing it: coaching, recruiting, building culture, resolving conflicts on the soccer field.",
+    "Every org he's touched has grown — not just from what he delivered, but from what he enabled others to deliver."]},
+  {id:'strat', x:24.5,y:20.5, talked:false,
+   standStyle:'console',  // teal tech console
+   standColor:'#0a5858',standAccent:'#20c0c0',standRoof:'#108080',
+   charColor:'#20e0e0',  charHead:'#103030',  // cyan/dark contrast
+   name:'Strategy Director',emoji:'♟️',
+   dlg:["Strategy without execution is daydreaming. Execution without strategy is busywork.",
+    "Mridul lives at the intersection.",
+    "MBA thesis on the $69B Microsoft-Activision deal — macro thinking. $740K ARR, 35% time-to-market reduction — execution.",
+    "Target roles: Sr. PMM · Sr. Product Manager · Ops Manager · Sr. GTM Strategy Manager."]},
+  {id:'gtm', x:24.5,y:24.5, talked:false,
+   standStyle:'screen',   // blue screen display
+   standColor:'#0830a0',standAccent:'#2060f8',standRoof:'#0848c8',
+   charColor:'#4080ff',  charHead:'#f0f0ff',
+   name:'GTM Strategist',emoji:'📡',
+   dlg:["Mridul's GTM experience spans 12 global markets across B2B SaaS, MarTech, and Fintech.",
+    "Built GTM strategies for enterprise software serving 20,000+ users — improving engagement 15% and 12% YoY.",
+    "Pioneered customer-first vertical positioning, developing 15 sales enablement assets that lifted lead conversion 17%.",
+    "Aligned product roadmaps with commercial objectives across Product, Engineering, Sales, Marketing, Risk, and Legal."]},
+
+  // CTA Zone
+  {id:'connect', x:32.5,y:22.5, talked:false,
+   standStyle:'mailbox',  // red mailbox stand
+   standColor:'#880020',standAccent:'#d00030',standRoof:'#aa0028',
+   charColor:'#ff4060',  charHead:'#fff0f0',  // red/white contrast
+   name:'Connect — Mridul',emoji:'💌',
+   dlg:["Hey! Thanks for exploring Mridul's World. I hope you got a real sense of what I'm about.",
+    "I'm actively looking for Senior PMM, Product Manager, Operations Manager, and Senior GTM Strategy roles.",
+    "If something clicked — a project, a team, a challenge — let's talk.",
+    "LinkedIn: linkedin.com/in/mridul-jammalamadaka-311941173",
+    "Email: mriduljammalamadaka@gmail.com  |  Phone: (408) 309-5269",
+    "I respond. I'm interested. Reach out — press ENTER now to open the full CTA!"]},
+  {id:'opp', x:34.5,y:24.5, talked:false,
+   standStyle:'gate',     // gold opportunity gate stand
+   standColor:'#786000',standAccent:'#e8c000',standRoof:'#a08800',
+   charColor:'#f8e000',  charHead:'#181000',  // gold/very dark contrast
+   name:'Opportunity Board',emoji:'🌟',
+   dlg:["Welcome! Whether you're a recruiter, founder, team lead, or just curious — hi.",
+    "Mridul is open to: Senior PMM · Sr. Product Manager · Ops Manager · Sr. GTM Strategy.",
+    "Also happy to chat about B2B SaaS strategy, MarTech architecture, fintech GTM, or high-performance teams.",
+    "No formal pitch needed. A genuine conversation is enough to start something great.",
+    "Hit the CTA board nearby or press the ✨ button to open the full connect screen!"]},
+];
+
+// ── GAME STATE ────────────────────────────────────────────────────
+const state={
+  player:{x:3.5,y:2.5,dir:2,frame:0,moving:false},
+  cam:{x:0,y:0},
+  dlg:{active:false,npc:null,page:0},
+  sgn:{active:false,data:null},
+  keys:{},fc:0,started:false,
+  animT:0,typIdx:0,typTarget:'',typDone:false,
+  activeMG:null,
+};
+
+// ── INPUT ────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  state.keys[e.key]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  if(!state.started){if(e.key==='Enter'||e.key===' ')startGame();return;}
+  if(e.key==='Enter'||e.key===' '){
+    if(state.dlg.active)advDlg();
+    else if(state.sgn.active)closeSgn();
+    else interact();
+  }
+  if(e.key==='Escape'){closeDlg();closeSgn();}
+});
+document.addEventListener('keyup',e=>{state.keys[e.key]=false;});
+// Mobile: only tap-to-start on title screen, NO global swipe/tap interact
+document.addEventListener('touchstart',e=>{
+  if(!state.started&&!ccShown){startGame();}
+},{passive:true});
+
+let ccShown=false;
+function startGame(){
+  if(ccShown)return;
+  ccShown=true;
+  // Go to character creator first
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('char-creator').style.display='flex';
+  initCharCreator();
+}
+
+function actuallyStartGame(){
+  document.getElementById('char-creator').style.display='none';
+  document.getElementById('game-wrapper').style.display='flex';
+  state.started=true;requestAnimationFrame(loop);
+}
+
+// ── CHARACTER CREATOR ──────────────────────────────────────────
+function initCharCreator(){
+  const hairDiv=document.getElementById('hair-swatches');
+  const outfitDiv=document.getElementById('outfit-swatches');
+  const nameInput=document.getElementById('cc-name');
+  const goBtn=document.getElementById('cc-go');
+  hairDiv.innerHTML='';outfitDiv.innerHTML='';
+
+  // Create hair swatches
+  HAIR_COLORS.forEach((col,i)=>{
+    const sw=document.createElement('div');
+    sw.className='cc-swatch'+(i===0?' selected':'');
+    sw.style.background=col;sw.title=HAIR_LABELS[i];
+    sw.onclick=()=>{
+      hairDiv.querySelectorAll('.cc-swatch').forEach(s=>s.classList.remove('selected'));
+      sw.classList.add('selected');playerHairColor=col;drawCCPreview();
+    };
+    hairDiv.appendChild(sw);
+  });
+  playerHairColor=HAIR_COLORS[0];
+
+  // Create outfit swatches
+  OUTFIT_COLORS.forEach((col,i)=>{
+    const sw=document.createElement('div');
+    sw.className='cc-swatch'+(i===0?' selected':'');
+    sw.style.background=col;sw.title=OUTFIT_LABELS[i];
+    sw.onclick=()=>{
+      outfitDiv.querySelectorAll('.cc-swatch').forEach(s=>s.classList.remove('selected'));
+      sw.classList.add('selected');playerOutfitColor=col;drawCCPreview();
+    };
+    outfitDiv.appendChild(sw);
+  });
+  playerOutfitColor=OUTFIT_COLORS[0];
+
+  // Name input
+  nameInput.value='';
+  nameInput.oninput=()=>{
+    const v=nameInput.value.trim();
+    goBtn.disabled=v.length===0;
+    playerName=v||'YOU';
+    drawCCPreview();
+  };
+
+  // Enter key to start
+  nameInput.onkeydown=(e)=>{
+    if(e.key==='Enter'&&nameInput.value.trim().length>0){
+      e.preventDefault();goBtn.click();
+    }
+  };
+
+  // Go button
+  goBtn.onclick=()=>{
+    if(nameInput.value.trim().length===0)return;
+    playerName=nameInput.value.trim();
+    actuallyStartGame();
+  };
+
+  // Initial preview
+  drawCCPreview();
+  // Auto-focus name
+  setTimeout(()=>nameInput.focus(),100);
+}
+
+function drawCCPreview(){
+  const c=document.getElementById('cc-preview');
+  const s=c.getContext('2d');
+  const w=128,h=160;
+  s.imageSmoothingEnabled=false;
+  // Background
+  s.fillStyle='#06061a';s.fillRect(0,0,w,h);
+  // Floor tiles
+  for(let tx=0;tx<4;tx++)for(let ty=2;ty<5;ty++){
+    s.fillStyle=(tx+ty)%3===0?'#719044':'#7fa04e';
+    s.fillRect(tx*32,ty*32,32,32);
+  }
+  // Character (scaled 2x for preview, centered)
+  const cx=40,cy=28,sc=2;
+  // Shadow
+  s.fillStyle='rgba(0,0,0,0.28)';s.fillRect(cx+4*sc,cy+28*sc,24*sc,5*sc);
+  // Shoes
+  s.fillStyle='#101010';s.fillRect(cx+7*sc,cy+29*sc,9*sc,4*sc);s.fillRect(cx+18*sc,cy+29*sc,9*sc,4*sc);
+  // Pants
+  s.fillStyle='#1a2888';s.fillRect(cx+9*sc,cy+22*sc,7*sc,8*sc);s.fillRect(cx+18*sc,cy+22*sc,7*sc,8*sc);
+  // Body
+  s.fillStyle=playerOutfitColor;s.fillRect(cx+6*sc,cy+12*sc,20*sc,12*sc);
+  // Collar
+  s.fillStyle='#fff';s.fillRect(cx+12*sc,cy+12*sc,8*sc,5*sc);
+  // Head
+  s.fillStyle=P.head;s.fillRect(cx+7*sc,cy+3*sc,18*sc,12*sc);
+  // Hair
+  s.fillStyle=playerHairColor;s.fillRect(cx+7*sc,cy+3*sc,18*sc,5*sc);
+  // Eyes
+  s.fillStyle=P.eye;s.fillRect(cx+10*sc,cy+8*sc,3*sc,3*sc);s.fillRect(cx+20*sc,cy+8*sc,3*sc,3*sc);
+  // Name tag
+  const dn=playerName.toUpperCase();
+  s.fillStyle='rgba(0,0,0,0.8)';s.fillRect(8,cy-8,w-16,16);
+  s.strokeStyle='rgba(248,232,0,0.5)';s.lineWidth=1;s.strokeRect(8,cy-8,w-16,16);
+  s.fillStyle='#f8e800';s.font='8px "Press Start 2P"';s.textAlign='center';
+  s.fillText(dn,w/2,cy+5);s.textAlign='left';
+}
+
+// ── COLLISION ─────────────────────────────────────────────────────
+function solid(tx,ty){
+  if(tx<0||tx>=MAP_W||ty<0||ty>=MAP_H)return true;
+  const t=rawMap[Math.floor(ty)][Math.floor(tx)];
+  if(t===T.WATER)return true;
+  if(t===T.BARRIER&&!ctaUnlocked)return true;
+  if(t===T.CTA&&!ctaUnlocked)return true;
+  for(const n of NPCS){if(Math.floor(n.x)===Math.floor(tx)&&Math.floor(n.y)===Math.floor(ty))return true;}
+  return false;
+}
+
+// ── INTERACT ─────────────────────────────────────────────────────
+function interact(){
+  const p=state.player;
+  let best=null,bestD=2.1;
+  for(const n of NPCS){const d=Math.hypot(p.x-n.x,p.y-n.y);if(d<bestD){best=n;bestD=d;}}
+  if(best){openDlg(best);return;}
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    const tx=Math.round(p.x)+dx,ty=Math.round(p.y)+dy;
+    if(ty<0||ty>=MAP_H||tx<0||tx>=MAP_W)continue;
+    const t=rawMap[ty][tx];
+    if(t===T.KIOSK){const k=SIGN_DATA[`${tx},${ty}`];if(k){openSgn(k);return;}}
+    if(t===T.SOCCER){launchMG('soccer');return;}
+    if(t===T.BARRIER&&!ctaUnlocked){
+      showLockedMsg();return;
+    }
+    if(t===T.CTA&&ctaUnlocked){openCTA();return;}
+  }
+}
+
+function showLockedMsg(){
+  const talked=NPCS.filter(n=>n.talked).length;
+  const rem=CTA_UNLOCK_THRESHOLD-talked;
+  openSgn({
+    title:'🔒 ZONE LOCKED',
+    lines:[
+      'The "WHAT YOU CAN DO NOW!" zone',
+      'is not yet accessible.',
+      '',
+      `You've had ${talked} conversation${talked!==1?'s':''}.`,
+      `Talk to ${rem} more character${rem!==1?'s':''} to unlock!`,
+      '',
+      'Explore the other zones first —',
+      'SJSU, NUCB, Career District,',
+      'Life & Hobbies, Future City.',
+    ]
+  });
+}
+
+function openDlg(n){
+  closeSgn();
+  const wasNew=!n.talked;
+  n.talked=true;
+  state.dlg={active:true,npc:n,page:0};
+  document.getElementById('dlg').style.display='block';
+  document.getElementById('dlg-spk').textContent=(n.emoji||'')+'  '+n.name;
+  startType(n.dlg[0]);
+  // Check CTA unlock after new conversation
+  if(wasNew)checkCTAUnlock();
+}
+
+function checkCTAUnlock(){
+  if(ctaUnlocked)return;
+  const talked=NPCS.filter(n=>n.talked).length;
+  if(talked>=CTA_UNLOCK_THRESHOLD){
+    ctaUnlocked=true;
+    // Convert barrier tiles to road
+    for(let by=20;by<=26;by++){
+      if(rawMap[by][29]===T.BARRIER)rawMap[by][29]=T.ROAD;
+    }
+    // Show unlock popup after a short delay (let current dialog finish naturally)
+    if(!unlockShown){
+      unlockShown=true;
+      setTimeout(()=>{
+        document.getElementById('unlock-popup').style.display='block';
+      },500);
+    }
+  }
+}
+function closeUnlockPopup(){
+  document.getElementById('unlock-popup').style.display='none';
+}
+function advDlg(){
+  if(!state.typDone){
+    state.typDone=true;state.typIdx=state.typTarget.length;
+    document.getElementById('dlg-txt').textContent=state.typTarget;return;
+  }
+  state.dlg.page++;
+  if(state.dlg.page>=state.dlg.npc.dlg.length){
+    const npc=state.dlg.npc;
+    closeDlg();
+    if(npc&&(npc.id==='connect'||npc.id==='opp'))openCTA();
+    else if(npc&&npc.gameOnTalk)setTimeout(()=>launchMG(npc.gameOnTalk),200);
+  }else startType(state.dlg.npc.dlg[state.dlg.page]);
+}
+function closeDlg(){state.dlg.active=false;document.getElementById('dlg').style.display='none';}
+function openSgn(d){
+  closeDlg();state.sgn={active:true,data:d};
+  document.getElementById('sgn-ttl').textContent=d.title;
+  document.getElementById('sgn-txt').textContent=d.lines.join('\n');
+  document.getElementById('sgn').style.display='block';
+}
+function closeSgn(){state.sgn.active=false;document.getElementById('sgn').style.display='none';}
+function startType(t){state.typTarget=t;state.typIdx=0;state.typDone=false;document.getElementById('dlg-txt').textContent='';}
+
+function openCTA(){document.getElementById('cta-screen').style.display='flex';}
+function closeCTA(){document.getElementById('cta-screen').style.display='none';}
+
+// ── MINI GAMES ─────────────────────────────────────────────────────
+const MGC=document.getElementById('mg-canvas');
+const mgx=MGC.getContext('2d');
+MGC.width=620;MGC.height=420;
+let mgRAF=null,mgState={};
+
+function closeMG(){
+  document.getElementById('mg-overlay').style.display='none';
+  cancelAnimationFrame(mgRAF);state.activeMG=null;
+}
+function launchMG(which){
+  state.activeMG=which;
+  document.getElementById('mg-overlay').style.display='flex';
+  if(which==='soccer')initSoccer();
+  else if(which==='quiz')initQuiz();
+  else if(which==='memory')initMemory();
+  document.getElementById('mg-restart-btn').onclick=()=>{
+    if(state.activeMG==='soccer')initSoccer();
+    else if(state.activeMG==='quiz')initQuiz();
+    else if(state.activeMG==='memory')initMemory();
+  };
+}
+
+// ─── GAME 1: SLINGSHOT SOCCER ────────────────────────────────────
+let sg={};
+function initSoccer(){
+  document.getElementById('mg-title').textContent='⚽ PENALTY SHOOTOUT';
+  document.getElementById('mg-sub').textContent='Drag ball backward · release to shoot! More drag = more power.';
+  sg={score:0,shots:0,max:5,phase:'aim',
+    bx:310,by:360,bvx:0,bvy:0,
+    drag:false,ds:null,dc:null,
+    gx:275,gdir:2.2,trail:[],spin:0,pow:0,animT:0};
+  document.getElementById('mg-s1').textContent='GOALS: 0';
+  document.getElementById('mg-s2').textContent='SHOTS: 0/5';
+  document.getElementById('mg-status').textContent='Drag the ball back like a slingshot — then release!';
+  cancelAnimationFrame(mgRAF);
+  MGC.onmousedown=null;MGC.onmousemove=null;MGC.onmouseup=null;MGC.onmouseleave=null;
+  MGC.ontouchstart=null;MGC.ontouchmove=null;MGC.ontouchend=null;
+  function getPos(e){
+    const r=MGC.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-r.left)*(MGC.width/r.width),y:(cy-r.top)*(MGC.height/r.height)};
+  }
+  MGC.onmousedown=MGC.ontouchstart=(e)=>{
+    if(e.cancelable)e.preventDefault();
+    if(sg.phase!=='aim')return;
+    const pos=getPos(e);
+    if(Math.hypot(pos.x-sg.bx,pos.y-sg.by)<36){sg.drag=true;sg.ds={x:sg.bx,y:sg.by};sg.dc=pos;}
+  };
+  MGC.onmousemove=MGC.ontouchmove=(e)=>{
+    if(e.cancelable)e.preventDefault();
+    if(!sg.drag)return;sg.dc=getPos(e);
+  };
+  const release=()=>{
+    if(!sg.drag)return;sg.drag=false;
+    if(!sg.ds||!sg.dc)return;
+    const dx=sg.ds.x-sg.dc.x,dy=sg.ds.y-sg.dc.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist<8){sg.ds=null;sg.dc=null;return;}
+    const pow=Math.min(dist/140,1);sg.pow=pow;
+    const spd=5+pow*20;
+    const ang=Math.atan2(dy,dx);
+    sg.bvx=Math.cos(ang)*spd;sg.bvy=Math.sin(ang)*spd;
+    sg.phase='flying';sg.trail=[];sg.ds=null;sg.dc=null;
+  };
+  MGC.onmouseup=MGC.onmouseleave=MGC.ontouchend=release;
+  soccerLoop();
+}
+function soccerLoop(){
+  mgRAF=requestAnimationFrame(soccerLoop);
+  if(sg.phase==='aim'||sg.phase==='result'){
+    sg.gx+=sg.gdir;
+    if(sg.gx>430)sg.gdir=-Math.abs(sg.gdir);
+    if(sg.gx<200)sg.gdir=Math.abs(sg.gdir);
+  }
+  if(sg.phase==='flying'){
+    sg.trail.push({x:sg.bx,y:sg.by,a:0.9});
+    sg.bx+=sg.bvx;sg.by+=sg.bvy;sg.bvx*=0.97;sg.bvy*=0.97;sg.spin+=0.25;
+    sg.trail.forEach(p=>p.a*=0.85);
+    if(sg.trail.length>22)sg.trail.shift();
+    if(sg.by<90||sg.bx<5||sg.bx>615||sg.by>415)resolveSoccer();
+  }
+  if(sg.phase==='result'){
+    sg.animT++;
+    if(sg.animT>90&&sg.shots<sg.max){sg.phase='aim';sg.bx=310;sg.by=360;sg.bvx=0;sg.bvy=0;sg.trail=[];}
+    if(sg.shots>=sg.max&&sg.animT>120){sg.phase='done';}
+  }
+  drawSoccer();
+}
+function resolveSoccer(){
+  const inGoal=sg.by<90&&sg.bx>155&&sg.bx<465;
+  const pow=sg.pow||0.5;
+  const reach=pow<0.35?110:pow<0.6?70:36;
+  const saved=inGoal&&Math.abs(sg.gx-sg.bx)<reach;
+  const goal=inGoal&&!saved;
+  sg.lastGoal=goal;
+  sg.shots++;
+  if(goal)sg.score++;
+  sg.phase='result';sg.animT=0;
+  document.getElementById('mg-s1').textContent='GOALS: '+sg.score;
+  document.getElementById('mg-s2').textContent='SHOTS: '+sg.shots+'/'+sg.max;
+  const rem=sg.max-sg.shots;
+  let msg=goal?`⚽ GOAL! Score: ${sg.score}`:(!inGoal?`😬 Off target! Aim for the goal!`:`🧤 Saved! Try a corner — drag further for max power!`);
+  if(rem>0)msg+=` ${rem} shots left.`;
+  else{const p=Math.round(sg.score/sg.max*100);
+    msg=p>=80?`🏆 ${p}%! PDA Academy material! Final: ${sg.score}/${sg.max}`:
+        p>=60?`⚽ ${p}% — solid! Mridul scored higher at tryouts. ${sg.score}/${sg.max}`:
+              `😅 ${p}% — Mridul kept his day job. Final: ${sg.score}/${sg.max}`;}
+  document.getElementById('mg-status').textContent=msg;
+}
+function drawSoccer(){
+  const s=mgx;const W=620,H=420;
+  // Field background with stripe pattern
+  s.fillStyle='#1a5c1a';s.fillRect(0,0,W,H);
+  for(let i=0;i<20;i++){s.fillStyle=i%2?'#1e681e':'#1a5c1a';s.fillRect(i*31,0,31,H);}
+  // Field lines
+  s.strokeStyle='rgba(255,255,255,0.5)';s.lineWidth=2;
+  s.strokeRect(12,12,596,396);
+  s.beginPath();s.moveTo(310,12);s.lineTo(310,408);s.stroke();
+  s.beginPath();s.arc(310,290,55,0,Math.PI*2);s.stroke();
+  s.fillStyle='rgba(255,255,255,0.5)';s.beginPath();s.arc(310,290,4,0,Math.PI*2);s.fill();
+  // Penalty arc
+  s.beginPath();s.arc(310,88,50,0,Math.PI);s.stroke();
+  // Penalty spot
+  s.beginPath();s.arc(310,360,4,0,Math.PI*2);s.fill();
+  // Goal area box
+  s.strokeStyle='rgba(255,255,255,0.4)';s.lineWidth=1.5;
+  s.strokeRect(210,12,200,50);
+  // Goal net mesh
+  s.fillStyle='rgba(220,220,220,0.08)';s.fillRect(155,14,310,78);
+  for(let gx2=155;gx2<465;gx2+=22){
+    s.strokeStyle='rgba(220,220,220,0.12)';s.lineWidth=0.5;
+    s.beginPath();s.moveTo(gx2,14);s.lineTo(gx2,92);s.stroke();
+  }
+  for(let gy=14;gy<92;gy+=16){
+    s.beginPath();s.moveTo(155,gy);s.lineTo(465,gy);s.stroke();
+  }
+  // Goal posts — thick white
+  s.fillStyle='#e8e8e8';s.fillRect(150,12,10,88);s.fillRect(460,12,10,88);s.fillRect(150,12,320,10);
+  s.fillStyle='rgba(0,0,0,0.3)';s.fillRect(156,18,4,76);s.fillRect(156,18,308,4);
+  // Goalie
+  const gx=Math.round(sg.gx);
+  const gBob=sg.phase==='aim'?Math.sin(Date.now()*0.004)*2:0;
+  s.fillStyle='rgba(0,0,0,0.2)';s.fillRect(gx-18,95,36,5);
+  // Legs
+  s.fillStyle='#102080';s.fillRect(gx-10,72+gBob,10,28);s.fillRect(gx,72+gBob,10,28);
+  // Jersey — bright yellow keeper
+  s.fillStyle='#d8b800';s.fillRect(gx-15,44+gBob,30,30);
+  // Number on jersey
+  s.fillStyle='rgba(0,0,0,0.5)';s.font='bold 10px monospace';s.textAlign='center';
+  s.fillText('1',gx,62+gBob);s.textAlign='left';
+  // Gloves — red
+  s.fillStyle='#e03030';s.fillRect(gx-25,48+gBob,12,14);s.fillRect(gx+13,48+gBob,12,14);
+  // Shine on gloves
+  s.fillStyle='rgba(255,255,255,0.2)';s.fillRect(gx-24,49+gBob,5,4);s.fillRect(gx+14,49+gBob,5,4);
+  // Head
+  s.fillStyle='#f0c870';s.fillRect(gx-11,28+gBob,22,18);
+  s.fillStyle='#401008';s.fillRect(gx-11,28+gBob,22,6);
+  s.fillStyle='#201008';s.fillRect(gx-7,38+gBob,5,5);s.fillRect(gx+2,38+gBob,5,5);
+  // Mouth
+  s.fillStyle='rgba(0,0,0,0.4)';s.fillRect(gx-4,45+gBob,8,2);
+
+  // Ball trail
+  for(const pt of sg.trail){
+    s.fillStyle=`rgba(255,255,255,${pt.a*0.2})`;
+    s.beginPath();s.arc(pt.x,pt.y,10*pt.a,0,Math.PI*2);s.fill();
+  }
+  // Ball
+  const bx2=sg.drag&&sg.dc?sg.dc.x:sg.bx;
+  const by2=sg.drag&&sg.dc?sg.dc.y:sg.by;
+  s.fillStyle='rgba(0,0,0,0.2)';s.beginPath();s.arc(bx2+5,by2+5,14,0,Math.PI*2);s.fill();
+  s.fillStyle='#fff';s.beginPath();s.arc(bx2,by2,14,0,Math.PI*2);s.fill();
+  const sp=sg.spin;
+  s.fillStyle='#111';
+  [[0,-10],[9,5],[-9,5],[0,-16],[13,7],[-13,7]].forEach(([px,py])=>{
+    const rx=px*Math.cos(sp)-py*Math.sin(sp),ry=px*Math.sin(sp)+py*Math.cos(sp);
+    s.fillRect(bx2+rx-3,by2+ry-3,6,6);
+  });
+  s.fillStyle='rgba(255,255,255,0.5)';s.beginPath();s.arc(bx2-5,by2-5,5,0,Math.PI*2);s.fill();
+
+  // Slingshot UI
+  if(sg.drag&&sg.dc&&sg.ds){
+    const dx=sg.ds.x-sg.dc.x,dy=sg.ds.y-sg.dc.y;
+    const dist=Math.hypot(dx,dy),pow=Math.min(dist/140,1);
+    const col=pow<0.35?'rgba(255,210,0,0.75)':pow<0.7?'rgba(255,140,0,0.8)':'rgba(255,50,0,0.9)';
+    // Elastic bands from fork points
+    s.strokeStyle=col;s.lineWidth=3;
+    s.beginPath();s.moveTo(sg.dc.x,sg.dc.y);s.lineTo(sg.ds.x-14,sg.ds.y);s.stroke();
+    s.beginPath();s.moveTo(sg.dc.x,sg.dc.y);s.lineTo(sg.ds.x+14,sg.ds.y);s.stroke();
+    // Fork prongs
+    s.fillStyle='#7a4010';s.fillRect(sg.ds.x-18,sg.ds.y-5,6,20);s.fillRect(sg.ds.x+12,sg.ds.y-5,6,20);
+    // Dotted trajectory arc
+    const vx=(dx/dist)*(5+pow*20)*0.97,vy=(dy/dist)*(5+pow*20)*0.97;
+    s.setLineDash([5,8]);s.strokeStyle='rgba(255,240,100,0.6)';s.lineWidth=2;
+    s.beginPath();let px2=sg.dc.x,py2=sg.dc.y,pvx=vx,pvy=vy;s.moveTo(px2,py2);
+    for(let i=0;i<28;i++){px2+=pvx;py2+=pvy;pvx*=0.97;pvy*=0.97;s.lineTo(px2,py2);if(py2<12)break;}
+    s.stroke();s.setLineDash([]);
+    // Power bar
+    const bw=180,bh=12,bx3=310-bw/2,by3=398;
+    s.fillStyle='rgba(0,0,0,0.7)';s.fillRect(bx3-3,by3-3,bw+6,bh+6);
+    const grad=s.createLinearGradient(bx3,0,bx3+bw*pow,0);
+    grad.addColorStop(0,'#40c040');grad.addColorStop(0.5,'#f8c000');grad.addColorStop(1,'#ff2020');
+    s.fillStyle=grad;s.fillRect(bx3,by3,bw*pow,bh);
+    s.strokeStyle='#f8e800';s.lineWidth=1.5;s.strokeRect(bx3,by3,bw,bh);
+    const pwLabel=pow<0.3?'WEAK':pow<0.55?'BUILDING...':pow<0.8?'GOOD POWER':'⚡ MAX POWER!';
+    s.fillStyle='#fff';s.font='6px "Press Start 2P"';s.textAlign='center';
+    s.fillText(pwLabel,310,by3-5);s.textAlign='left';
+  }
+  // Drag hint ring when idle
+  if(sg.phase==='aim'&&!sg.drag){
+    const pulse=0.4+0.6*Math.abs(Math.sin(Date.now()*0.003));
+    s.strokeStyle=`rgba(255,232,0,${pulse})`;s.lineWidth=2.5;
+    s.beginPath();s.arc(sg.bx,sg.by,24,0,Math.PI*2);s.stroke();
+    // Animated arrow hinting to drag down
+    const arr=Math.sin(Date.now()*0.004)*3;
+    s.fillStyle=`rgba(255,232,0,${pulse})`;s.font='7px "Press Start 2P"';
+    s.textAlign='center';s.fillText('DRAG ↓',sg.bx,sg.by+42+arr);s.textAlign='left';
+  }
+  // Result splash
+  if((sg.phase==='result'||sg.phase==='done')&&sg.animT>0&&sg.animT<85){
+    const t=Math.min(sg.animT/12,1);
+    const isG=sg.lastGoal;
+    s.fillStyle=`rgba(${isG?'0,180,0':'160,0,0'},${t*0.85})`;s.fillRect(110,130,400,80);
+    s.strokeStyle=isG?'#60ff60':'#ff6060';s.lineWidth=2;s.strokeRect(110,130,400,80);
+    s.fillStyle='#fff';s.font='bold 18px "Press Start 2P"';s.textAlign='center';
+    s.fillText(isG?'GOAL! ⚽':'SAVED! 🧤 / MISS',310,178);s.textAlign='left';
+  }
+}
+
+// ─── GAME 2: TRIVIA QUIZ ────────────────────────────────────────
+const QUIZ_QS=[
+  {q:"What CRM platform did Mridul's team build at JMT?",
+   a:["A fintech payments app","An enterprise CRM for 20K+ users","A social media dashboard","An inventory system"],c:1,
+   fact:"It generated $740K ARR with 12% YoY growth."},
+  {q:"How many global markets did Mridul work across?",
+   a:["5 markets","8 markets","12 markets","20 markets"],c:2,
+   fact:"Fintech advisory spanned 12 countries across APAC, EMEA & NA."},
+  {q:"Which certifications did Mridul earn quickly?",
+   a:["AWS & Azure","AJO & Marketo","Google & HubSpot","Salesforce & SAP"],c:1,
+   fact:"Adobe Journey Optimizer + Marketo — both earned in record time."},
+  {q:"What sport did Mridul play at a high competitive level?",
+   a:["Basketball","Tennis","Soccer","Rugby"],c:2,
+   fact:"SJ Earthquakes PDA Academy — and tried out at pro clubs internationally!"},
+  {q:"What percentage of NUCB's MBA class failed each term?",
+   a:["10%","20%","30%","40%"],c:2,
+   fact:"The bell curve: only 70% of the class passed each term."},
+  {q:"What ARR did Mridul generate at JMT Worldwide?",
+   a:["$400K","$740K","$1.2M","$2M"],c:1,
+   fact:"$740K ARR with 12% year-over-year growth through customer-back approach."},
+  {q:"What is Mridul's Japanese language proficiency level?",
+   a:["N5 Beginner","N4 Elementary","N3 Intermediate","N2 Upper"],c:2,
+   fact:"N3 — conversational fluency. He lived in Nagoya for his MBA."},
+];
+let qz={};
+function initQuiz(){
+  document.getElementById('mg-title').textContent='🧠 MRIDUL TRIVIA';
+  document.getElementById('mg-sub').textContent='How well did you explore the world? Click to answer!';
+  qz={qs:[...QUIZ_QS].sort(()=>Math.random()-0.5).slice(0,5),
+    idx:0,score:0,selected:null,answered:false,animT:0};
+  document.getElementById('mg-s1').textContent='SCORE: 0';
+  document.getElementById('mg-s2').textContent='Q: 1/5';
+  document.getElementById('mg-status').textContent='Click the correct answer!';
+  MGC.onmousedown=MGC.ontouchstart=(e)=>{
+    if(e.cancelable)e.preventDefault();
+    if(qz.answered)return;
+    const r=MGC.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    const mx=(cx-r.left)*(MGC.width/r.width),my=(cy-r.top)*(MGC.height/r.height);
+    const bh=50,gap=8,startY=190;
+    for(let i=0;i<4;i++){
+      const by=startY+i*(bh+gap);
+      if(mx>20&&mx<600&&my>by&&my<by+bh){selectAnswer(i);break;}
+    }
+  };
+  MGC.onmousemove=MGC.onmouseup=MGC.onmouseleave=null;
+  cancelAnimationFrame(mgRAF);
+  quizLoop();
+}
+function selectAnswer(i){
+  if(qz.answered)return;
+  qz.selected=i;qz.answered=true;
+  const correct=i===qz.qs[qz.idx].c;
+  if(correct)qz.score++;
+  document.getElementById('mg-s1').textContent='SCORE: '+qz.score;
+  const msg=correct?`✅ Correct! ${qz.qs[qz.idx].fact}`:`❌ Not quite. ${qz.qs[qz.idx].fact}`;
+  document.getElementById('mg-status').textContent=msg;
+  setTimeout(()=>{
+    qz.idx++;qz.answered=false;qz.selected=null;
+    if(qz.idx>=qz.qs.length){
+      const p=Math.round(qz.score/qz.qs.length*100);
+      document.getElementById('mg-status').textContent=
+        p===100?`🏆 Perfect! You know Mridul better than he knows himself!`:
+        p>=80?`🌟 ${p}%! You paid attention. Impressive.`:
+        p>=60?`👍 ${p}%! Good effort — explore more zones!`:
+              `💡 ${p}%! Head back and talk to more characters!`;
+      qz.done=true;return;
+    }
+    document.getElementById('mg-s2').textContent=`Q: ${qz.idx+1}/5`;
+  },2200);
+}
+function quizLoop(){
+  mgRAF=requestAnimationFrame(quizLoop);
+  drawQuiz();
+}
+function drawQuiz(){
+  const s=mgx;const w=620,h=420;
+  s.fillStyle='#0a0a20';s.fillRect(0,0,w,h);
+  for(let i=0;i<40;i++){
+    const sx2=(i*137)%w,sy2=(i*97)%h;
+    const a=0.3+0.4*Math.sin(Date.now()*0.001+i);
+    s.fillStyle=`rgba(200,200,255,${a})`;s.fillRect(sx2,sy2,2,2);
+  }
+  if(!qz.qs||qz.done){
+    if(qz.done){
+      s.fillStyle='#f8e800';s.font='12px "Press Start 2P"';s.textAlign='center';
+      s.fillText(`FINAL SCORE: ${qz.score}/5`,w/2,200);
+      s.fillStyle='#a0c0ff';s.font='8px "Press Start 2P"';
+      s.fillText('Hit ↺ RESTART to play again',w/2,240);s.textAlign='left';
+    }
+    return;
+  }
+  const q=qz.qs[qz.idx];
+  // Question box
+  s.fillStyle='rgba(255,255,255,0.06)';s.fillRect(12,14,596,140);
+  s.strokeStyle='rgba(100,120,255,0.35)';s.lineWidth=1;s.strokeRect(12,14,596,140);
+  s.fillStyle='#e0eaff';s.font='7px "Press Start 2P"';s.textAlign='left';
+  const words=q.q.split(' ');let line='',lines2=[],maxW=570;
+  for(const w2 of words){
+    const test=line+w2+' ';
+    if(s.measureText(test).width>maxW&&line!=''){lines2.push(line.trim());line=w2+' ';}else line=test;
+  }
+  if(line.trim())lines2.push(line.trim());
+  lines2.forEach((l,i)=>s.fillText(l,24,44+i*20));
+  // Answer boxes
+  const bh=50,gap=8,startY=186;
+  for(let i=0;i<4;i++){
+    const by=startY+i*(bh+gap);
+    let bg='#141430',border='#304080',txt='#a0c0ff';
+    if(qz.answered){
+      if(i===q.c){bg='#0a3010';border='#30a040';txt='#80ff80';}
+      else if(i===qz.selected&&i!==q.c){bg='#301010';border='#a03030';txt='#ff8080';}
+    }
+    s.fillStyle=bg;s.fillRect(20,by,580,bh);
+    s.strokeStyle=border;s.lineWidth=1.5;s.strokeRect(20,by,580,bh);
+    s.fillStyle=txt;s.font='7px "Press Start 2P"';
+    s.fillText(`${['A','B','C','D'][i]}.  ${q.a[i]}`,36,by+32);
+  }
+  s.fillStyle='#506080';s.font='6px "Press Start 2P"';s.textAlign='right';
+  s.fillText(`Q ${qz.idx+1} / ${qz.qs.length}`,608,410);s.textAlign='left';
+}
+
+// ─── GAME 3: MEMORY MATCH ───────────────────────────────────────
+const MEM_CARDS=['🏫','🎓','🏢','⚽','🚀','💼','📊','🏆'];
+let mem={};
+function initMemory(){
+  document.getElementById('mg-title').textContent='🃏 SKILL MEMORY MATCH';
+  document.getElementById('mg-sub').textContent='Find all matching pairs — match Mridul\'s skills!';
+  const pairs=[...MEM_CARDS,...MEM_CARDS].sort(()=>Math.random()-0.5);
+  mem={cards:pairs.map((v,i)=>({v,i,flipped:false,matched:false})),
+    sel:[],moves:0,matches:0,anim:0};
+  document.getElementById('mg-s1').textContent='MOVES: 0';
+  document.getElementById('mg-s2').textContent='MATCHES: 0/8';
+  document.getElementById('mg-status').textContent='Click cards to flip them!';
+  MGC.onmousedown=MGC.ontouchstart=(e)=>{
+    if(e.cancelable)e.preventDefault();
+    if(mem.sel.length===2)return;
+    const r=MGC.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    const mx=(cx-r.left)*(MGC.width/r.width),my=(cy-r.top)*(MGC.height/r.height);
+    const cols=4,cw=132,ch=84,startX=18,startY=24,gap=8;
+    for(let i=0;i<16;i++){
+      const col=i%cols,row=Math.floor(i/cols);
+      const bx=startX+col*(cw+gap),by=startY+row*(ch+gap);
+      if(mx>bx&&mx<bx+cw&&my>by&&my<by+ch){
+        const card=mem.cards[i];
+        if(card.flipped||card.matched)break;
+        card.flipped=true;mem.sel.push(i);
+        if(mem.sel.length===2){
+          mem.moves++;
+          document.getElementById('mg-s1').textContent='MOVES: '+mem.moves;
+          const [a,b]=mem.sel.map(x=>mem.cards[x]);
+          if(a.v===b.v){a.matched=b.matched=true;mem.matches++;mem.sel=[];
+            document.getElementById('mg-s2').textContent='MATCHES: '+mem.matches+'/8';
+            if(mem.matches===8){
+              document.getElementById('mg-status').textContent=
+                `🏆 All matched! ${mem.moves} moves. ${mem.moves<=18?'Outstanding!':mem.moves<=24?'Well done!':'Keep practicing!'}`;}
+          }else{setTimeout(()=>{mem.cards[mem.sel[0]].flipped=false;mem.cards[mem.sel[1]].flipped=false;mem.sel=[];},900);}
+        }
+        break;
+      }
+    }
+  };
+  MGC.onmousemove=MGC.onmouseup=MGC.onmouseleave=null;
+  cancelAnimationFrame(mgRAF);
+  memoryLoop();
+}
+function memoryLoop(){mgRAF=requestAnimationFrame(memoryLoop);drawMemory();}
+function drawMemory(){
+  const s=mgx;const w=620,h=420;
+  s.fillStyle='#0e0a20';s.fillRect(0,0,w,h);
+  if(!mem.cards)return;
+  const cols=4,cw=132,ch=84,sx=18,sy=24,gap=8;
+  for(let i=0;i<16;i++){
+    const c=mem.cards[i];
+    const col=i%cols,row=Math.floor(i/cols);
+    const bx=sx+col*(cw+gap),by=sy+row*(ch+gap);
+    if(c.matched){
+      s.fillStyle='#0a2a10';s.fillRect(bx,by,cw,ch);
+      s.strokeStyle='#20c040';s.lineWidth=2;s.strokeRect(bx,by,cw,ch);
+      s.font='32px serif';s.textAlign='center';s.fillText(c.v,bx+cw/2,by+ch/2+11);
+    }else if(c.flipped){
+      s.fillStyle='#1a1a40';s.fillRect(bx,by,cw,ch);
+      s.strokeStyle='#f8e800';s.lineWidth=2;s.strokeRect(bx,by,cw,ch);
+      s.font='32px serif';s.textAlign='center';s.fillText(c.v,bx+cw/2,by+ch/2+11);
+    }else{
+      // Facedown — nice card back design
+      s.fillStyle='#141428';s.fillRect(bx,by,cw,ch);
+      s.strokeStyle='#303070';s.lineWidth=1.5;s.strokeRect(bx,by,cw,ch);
+      s.strokeStyle='rgba(80,80,180,0.3)';s.lineWidth=1;s.strokeRect(bx+4,by+4,cw-8,ch-8);
+      s.fillStyle='#252550';s.font='22px serif';s.textAlign='center';s.fillText('?',bx+cw/2,by+ch/2+8);
+    }
+  }
+  s.textAlign='left';
+}
+
+// Additional game triggers: boat NPC → memory match, strat NPC → quiz
+// These launch mini-games after dialogue finishes
+NPCS.find(n=>n.id==='boat_npc').gameOnTalk='memory';
+NPCS.find(n=>n.id==='strat').gameOnTalk='quiz';
+
+// ── MOVEMENT ─────────────────────────────────────────────────────
+const SPD=0.14;
+function updatePlayer(){
+  if(state.dlg.active||state.sgn.active)return;
+  const p=state.player;let dx=0,dy=0;
+  if(state.keys['ArrowLeft']||state.keys['a']){dx=-1;p.dir=3;}
+  if(state.keys['ArrowRight']||state.keys['d']){dx=1;p.dir=1;}
+  if(state.keys['ArrowUp']||state.keys['w']){dy=-1;p.dir=0;}
+  if(state.keys['ArrowDown']||state.keys['s']){dy=1;p.dir=2;}
+  if(dx&&dy){dx*=0.707;dy*=0.707;}
+  if(dx||dy){
+    p.moving=true;state.animT+=0.14;p.frame=Math.floor(state.animT)%4;
+    const nx=p.x+dx*SPD,ny=p.y+dy*SPD;
+    if(!solid(Math.round(nx),Math.round(p.y)))p.x=nx;
+    if(!solid(Math.round(p.x),Math.round(ny)))p.y=ny;
+  }else{p.moving=false;p.frame=0;}
+  p.x=Math.max(0.5,Math.min(MAP_W-0.5,p.x));
+  p.y=Math.max(0.5,Math.min(MAP_H-0.5,p.y));
+}
+function updateCam(){
+  const p=state.player;
+  const tx=p.x*TILE-canvas.width/2,ty=p.y*TILE-canvas.height/2;
+  state.cam.x+=(tx-state.cam.x)*0.1;state.cam.y+=(ty-state.cam.y)*0.1;
+  state.cam.x=Math.max(0,Math.min(MAP_W*TILE-canvas.width,state.cam.x));
+  state.cam.y=Math.max(0,Math.min(MAP_H*TILE-canvas.height,state.cam.y));
+}
+
+// ── DRAW TILE ─────────────────────────────────────────────────────
+function drawTile(tx,ty){
+  const sx=Math.round(tx*TILE-state.cam.x),sy=Math.round(ty*TILE-state.cam.y);
+  if(sx<-TILE||sx>canvas.width+TILE||sy<-TILE||sy>canvas.height+TILE)return;
+  const t=rawMap[ty][tx],f=state.fc;
+  switch(t){
+    case T.GRASS:{
+      let g1=P.gA,g2=P.gB;
+      if(tx>=17&&ty>=18&&tx<=27){g1='#6a5a90';g2='#5a4a80';}
+      ctx.fillStyle=(tx+ty)%3===0?g2:g1;ctx.fillRect(sx,sy,TILE,TILE);
+      break;}
+    case T.WELCOME:{
+      ctx.fillStyle=(tx+ty)%2===0?'#608040':'#507030';ctx.fillRect(sx,sy,TILE,TILE);
+      break;}
+    case T.CTA:{
+      ctx.fillStyle=(tx+ty)%2===0?'#100c28':'#0c0820';ctx.fillRect(sx,sy,TILE,TILE);
+      if((tx*7+ty*11)%8===0){
+        const sf=0.4+0.6*Math.sin(f*0.04+tx+ty*0.5);
+        ctx.fillStyle=`rgba(248,232,0,${sf*0.35})`;ctx.fillRect(sx+14,sy+12,4,4);
+      }
+      break;}
+    case T.BARRIER:{
+      if(!ctaUnlocked){
+        // Locked barrier - dark wall with pulsing lock icon
+        ctx.fillStyle='#0a0820';ctx.fillRect(sx,sy,TILE,TILE);
+        ctx.fillStyle='#1a1040';ctx.fillRect(sx+2,sy+2,TILE-4,TILE-4);
+        // Chain pattern
+        ctx.fillStyle='#404060';
+        ctx.fillRect(sx+6,sy+4,4,TILE-8);ctx.fillRect(sx+TILE-10,sy+4,4,TILE-8);
+        for(let cy=4;cy<TILE-4;cy+=8){ctx.fillRect(sx+6,sy+cy,TILE-12,2);}
+        // Pulsing lock
+        const lp=0.5+0.5*Math.sin(f*0.08);
+        ctx.fillStyle=`rgba(255,60,60,${0.4+lp*0.4})`;
+        ctx.font='14px serif';ctx.fillText('🔒',sx+6,sy+22);
+      }else{
+        // Unlocked - render as road
+        ctx.fillStyle=P.road;ctx.fillRect(sx,sy,TILE,TILE);
+        ctx.fillStyle=P.roadL;ctx.fillRect(sx+2,sy+2,TILE-4,2);ctx.fillRect(sx+2,sy+TILE-4,TILE-4,2);
+      }
+      break;}
+    case T.ROAD:{
+      ctx.fillStyle=P.road;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle=P.roadL;ctx.fillRect(sx+2,sy+2,TILE-4,2);ctx.fillRect(sx+2,sy+TILE-4,TILE-4,2);
+      if(ty===7||ty===17||ty===28){if((tx%4)===0){ctx.fillStyle=P.roadM;ctx.fillRect(sx+8,sy+13,16,6);}}
+      break;}
+    case T.WATER:{
+      const w=Math.sin(f*0.04+tx*0.6+ty*0.3)>0;
+      ctx.fillStyle=w?P.water:P.waterB;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(sx+2,sy+(f%24<12?8:10),TILE-4,2);
+      ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(sx+6,sy+(f%24<12?20:18),TILE-12,2);
+      break;}
+    case T.TREE:{
+      ctx.fillStyle=(tx>=28)?'#0c0820':(tx>=17&&ty>=18)?'#6a5a90':
+                   (tx>=0&&ty<=6)?'#507030':P.gA;
+      ctx.fillRect(sx,sy,TILE,TILE);
+      const inN=tx>=10&&tx<=21&&ty<=16;
+      const inF=tx>=17&&ty>=18&&tx<=27;
+      const inC=tx>=28;const inW=tx<=7&&ty<=6;
+      const tc=inF?P.trPurp:inN?P.trPink:inC?P.trBlue:inW?P.trGold:P.trTeal;
+      const td=inF?P.trPurpD:inN?P.trPinkD:inC?P.trBlueD:inW?P.trGoldD:P.trTealD;
+      ctx.fillStyle=P.trTrunk;ctx.fillRect(sx+13,sy+20,6,12);
+      ctx.fillStyle=td;ctx.fillRect(sx+5,sy+4,22,20);
+      ctx.fillStyle=tc;ctx.fillRect(sx+7,sy+2,18,17);
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(sx+9,sy+4,5,4);
+      break;}
+    case T.SAND:{
+      ctx.fillStyle=(tx+ty)%2===0?P.sand:P.sandD;ctx.fillRect(sx,sy,TILE,TILE);
+      if(tx===2||tx===10){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillRect(tx===2?sx+2:sx+TILE-4,sy,2,TILE);}
+      if(ty===19||ty===26){ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillRect(sx,ty===19?sy+2:sy+TILE-4,TILE,2);}
+      if(ty===22&&tx>=2&&tx<=10){ctx.fillStyle='rgba(255,255,255,0.4)';ctx.fillRect(sx,sy+15,TILE,2);}
+      break;}
+    case T.GOAL:{
+      ctx.fillStyle=P.sand;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle='#d0d0d0';ctx.fillRect(sx+2,sy+4,28,4);
+      ctx.fillStyle='#b8b8b8';ctx.fillRect(sx+2,sy+4,4,28);ctx.fillRect(sx+26,sy+4,4,28);
+      ctx.fillStyle='rgba(200,200,200,0.12)';ctx.fillRect(sx+6,sy+8,20,22);
+      break;}
+    case T.SOCCER:{
+      ctx.fillStyle=P.sand;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(sx+16,sy+16,11,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.7)';ctx.fillRect(sx+14,sy+14,4,4);
+      const pulse=0.4+0.6*Math.abs(Math.sin(f*0.1));
+      ctx.strokeStyle=`rgba(255,232,0,${pulse})`;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(sx+16,sy+16,14,0,Math.PI*2);ctx.stroke();
+      ctx.font='14px serif';ctx.fillText('⚽',sx+5,sy+24);
+      break;}
+    case T.FLOWER:{
+      const bg=tx>=28?'#0c0820':tx<=7&&ty<=6?'#507030':P.gA;
+      ctx.fillStyle=bg;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle='#3a8030';ctx.fillRect(sx+14,sy+18,4,10);
+      const fc=(tx*3+ty*5)%2===0?P.flwP:P.flwY;
+      ctx.fillStyle=fc;ctx.fillRect(sx+9,sy+8,14,14);
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillRect(sx+13,sy+10,6,6);
+      break;}
+    case T.BRIDGE:{
+      ctx.fillStyle='#3070c0';ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle='#b08828';ctx.fillRect(sx+4,sy,8,TILE);
+      ctx.fillStyle='#907020';ctx.fillRect(sx+4,sy,2,TILE);ctx.fillRect(sx+10,sy,2,TILE);
+      break;}
+    case T.KIOSK:{
+      const bg=tx>=28&&ty>=18?'#0c0820':tx<=7&&ty<=6?'#507030':P.gA;
+      ctx.fillStyle=bg;ctx.fillRect(sx,sy,TILE,TILE);
+      ctx.fillStyle='#5a3008';ctx.fillRect(sx+14,sy+20,4,12);
+      ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(sx+6,sy+5,22,18);
+      ctx.fillStyle='#0e0e30';ctx.fillRect(sx+4,sy+3,24,18);
+      ctx.strokeStyle='#f8e800';ctx.lineWidth=2;ctx.strokeRect(sx+4,sy+3,24,18);
+      ctx.fillStyle='rgba(248,232,0,0.1)';ctx.fillRect(sx+4,sy+3,24,5);
+      ctx.fillStyle='#f8e800';ctx.font='bold 11px "Press Start 2P"';ctx.fillText('i',sx+14,sy+16);
+      const gp=0.1+0.08*Math.sin(f*0.08);
+      ctx.fillStyle=`rgba(248,232,0,${gp})`;ctx.fillRect(sx+4,sy+3,24,18);
+      break;}
+    default:{ctx.fillStyle='#333';ctx.fillRect(sx,sy,TILE,TILE);}
+  }
+}
+
+// ── CTA GATE ENTRANCE (drawn in world) ───────────────────────────
+function drawCTAGate(){
+  // Gate at the entrance to CTA zone (col 29, spanning rows 20-22)
+  const gx=Math.round(29*TILE-state.cam.x),gy=Math.round(20*TILE-state.cam.y);
+  if(gx<-160||gx>canvas.width+160||gy<-160||gy>canvas.height+160)return;
+  const f=state.fc;
+  const isLocked=!ctaUnlocked;
+  const pulse=isLocked?0.4+0.3*Math.sin(f*0.06):0.6+0.4*Math.sin(f*0.06);
+  const glow=isLocked?0.08:0.15+0.12*Math.sin(f*0.08);
+  const accentCol=isLocked?'rgba(255,60,60,':'rgba(248,232,0,';
+  const solidAccent=isLocked?'#a03030':'#f8e800';
+  const postCol=isLocked?'#4a2020':'#c09000';
+  const postDark=isLocked?'#301010':'#7a5800';
+
+  // Outer arch glow
+  ctx.fillStyle=`${accentCol}${glow*0.4})`;
+  ctx.fillRect(gx-6,gy-20,76,80);
+
+  // Gate post left
+  ctx.fillStyle=postDark;ctx.fillRect(gx-2,gy-16,12,72);
+  ctx.fillStyle=postCol;ctx.fillRect(gx,gy-16,10,72);
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(gx+2,gy-14,3,66);
+
+  // Gate post right
+  ctx.fillStyle=postDark;ctx.fillRect(gx+54,gy-16,12,72);
+  ctx.fillStyle=postCol;ctx.fillRect(gx+54,gy-16,10,72);
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(gx+56,gy-14,3,66);
+
+  // Arch beam top
+  ctx.fillStyle=postDark;ctx.fillRect(gx-2,gy-22,68,10);
+  ctx.fillStyle=solidAccent;ctx.fillRect(gx,gy-20,64,8);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(gx+2,gy-19,60,3);
+
+  // Sign panel on arch
+  ctx.fillStyle='rgba(8,4,30,0.95)';ctx.fillRect(gx+2,gy-18,60,16);
+  ctx.strokeStyle=`${accentCol}${pulse})`;ctx.lineWidth=1.5;ctx.strokeRect(gx+2,gy-18,60,16);
+
+  if(isLocked){
+    ctx.fillStyle=`${accentCol}${pulse})`;ctx.font='4px "Press Start 2P"';
+    ctx.fillText('LOCKED',gx+11,gy-10);
+    const talked=NPCS.filter(n=>n.talked).length;
+    ctx.fillText(`${talked}/${CTA_UNLOCK_THRESHOLD} TALKS`,gx+8,gy-3);
+    // Lock icons on posts
+    const lp2=0.5+0.5*Math.sin(f*0.1);
+    ctx.fillStyle=`rgba(255,60,60,${lp2})`;
+    ctx.font='10px serif';
+    ctx.fillText('🔒',gx-2,gy+12);ctx.fillText('🔒',gx+54,gy+12);
+  }else{
+    ctx.fillStyle=`${accentCol}${pulse})`;ctx.font='4px "Press Start 2P"';
+    ctx.fillText('WHAT YOU',gx+8,gy-10);
+    ctx.fillText('CAN DO NOW!',gx+5,gy-3);
+    // Decorative stars on posts
+    const starPulse=0.5+0.5*Math.sin(f*0.1);
+    ctx.fillStyle=`rgba(255,232,0,${starPulse})`;
+    ctx.font='10px serif';
+    ctx.fillText('✨',gx-4,gy+8);ctx.fillText('✨',gx+54,gy+8);
+    ctx.fillText('✨',gx-4,gy+24);ctx.fillText('✨',gx+54,gy+24);
+  }
+
+  // Ground path arrow pointing in (only when unlocked)
+  if(!isLocked){
+    ctx.fillStyle=`rgba(248,232,0,${0.3+0.3*Math.sin(f*0.08)})`;
+    ctx.fillRect(gx+28,gy+52,8,6);ctx.fillRect(gx+24,gy+60,16,6);ctx.fillRect(gx+20,gy+68,24,6);
+  }
+}
+
+// ── DRAW NPC STAND ────────────────────────────────────────────────
+function drawNPC(n){
+  const sx=Math.round(n.x*TILE-state.cam.x),sy=Math.round(n.y*TILE-state.cam.y);
+  if(sx<-80||sx>canvas.width+80||sy<-80||sy>canvas.height+80)return;
+  const f=state.fc;
+
+  if(n.standStyle==='boat'){drawBoatNPC(n,sx,sy,f);return;}
+
+  const bob=Math.sin(f*0.04+n.x*0.7)*1.2;
+  const sc=n.standColor,sa=n.standAccent,sr=n.standRoof||n.standColor;
+
+  // ── Choose stand shape by style ──
+  drawStand(n,sx,sy,sc,sa,sr,bob,f);
+
+  // ── Character behind stand ──
+  const cxp=sx+2,cyp=sy-18+bob;
+  // Arms
+  ctx.fillStyle=n.charColor;
+  ctx.fillRect(cxp,cyp+16,6,14);
+  ctx.fillRect(cxp+22,cyp+16,6,14);
+  // Body / torso
+  ctx.fillStyle=n.charColor;
+  ctx.fillRect(cxp+5,cyp+14,18,18);
+  // Shirt collar / lapels
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.fillRect(cxp+10,cyp+14,8,6);
+  // Neck
+  ctx.fillStyle=n.charHead||P.head;
+  ctx.fillRect(cxp+10,cyp+10,8,6);
+  // Head — noticeably larger than body
+  ctx.fillStyle=n.charHead||P.head;
+  ctx.fillRect(cxp+4,cyp-2,20,16);
+  // Hair
+  ctx.fillStyle=n.charColor;
+  ctx.fillRect(cxp+4,cyp-2,20,5);
+  // Eye whites (for light-headed chars)
+  const headDark=!n.charHead||n.charHead==='#f0c870'||n.charHead==='#f8d8a0'||n.charHead==='#f0d0a0'||n.charHead==='#f0e0ff'||n.charHead==='#f0f0ff'||n.charHead==='#fff0f0';
+  if(headDark){
+    // Dark eyes on light skin
+    ctx.fillStyle='#201008';
+    ctx.fillRect(cxp+7,cyp+7,4,4);ctx.fillRect(cxp+16,cyp+7,4,4);
+    // Eye shine
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.fillRect(cxp+8,cyp+7,2,2);ctx.fillRect(cxp+17,cyp+7,2,2);
+    // Smile
+    ctx.fillStyle='rgba(100,40,20,0.6)';
+    ctx.fillRect(cxp+8,cyp+13,2,1);ctx.fillRect(cxp+10,cyp+14,4,1);ctx.fillRect(cxp+14,cyp+13,2,1);
+  }else{
+    // Light/bright eyes on dark skin tone
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.fillRect(cxp+7,cyp+7,4,4);ctx.fillRect(cxp+16,cyp+7,4,4);
+    ctx.fillStyle='rgba(0,0,0,0.8)';
+    ctx.fillRect(cxp+8,cyp+8,2,2);ctx.fillRect(cxp+17,cyp+8,2,2);
+    ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillRect(cxp+9,cyp+13,6,1);
+  }
+
+  // ── Interaction indicator (disappears after talked) ──
+  if(!n.talked){
+    const pulse=0.5+0.5*Math.abs(Math.sin(f*0.12));
+    ctx.fillStyle=`rgba(255,232,50,${pulse*0.2})`;
+    ctx.beginPath();ctx.arc(sx+34,sy-8,11,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(255,232,50,${0.7+pulse*0.3})`;
+    ctx.font='11px serif';ctx.fillText('★',sx+26,sy-2);
+  }else{
+    ctx.fillStyle='rgba(80,255,120,0.8)';
+    ctx.font='11px serif';ctx.fillText('✓',sx+28,sy-2);
+  }
+}
+
+function drawStand(n,sx,sy,sc,sa,sr,bob,f){
+  const style=n.standStyle;
+  const oy=12; // y offset for counter
+
+  // Drop shadow
+  ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(sx-2,sy+32,42,5);
+
+  if(style==='arch'){
+    // Rounded arch booth — green/nature
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy,40,20);
+    // Arched top
+    ctx.fillStyle=sr;ctx.fillRect(sx-6,sy+oy-8,44,12);
+    ctx.beginPath();ctx.arc(sx+16,sy+oy-4,22,Math.PI,0);ctx.fillStyle=sr;ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(sx-4,sy+oy,40,5);
+    // Front
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy+20,40,10);
+    // Emblem: leaf
+    ctx.font='13px serif';ctx.fillText('🌿',sx+5,sy+oy+16);
+  }else if(style==='lectern'){
+    // Wooden angled lectern
+    ctx.fillStyle='#5a3008';ctx.fillRect(sx,sy+oy+18,36,14);// base
+    ctx.fillStyle=sc;
+    ctx.beginPath();ctx.moveTo(sx-2,sy+oy);ctx.lineTo(sx+38,sy+oy);
+    ctx.lineTo(sx+34,sy+oy+20);ctx.lineTo(sx+2,sy+oy+20);ctx.closePath();ctx.fill();
+    ctx.fillStyle=sa;ctx.fillRect(sx-2,sy+oy,40,4);
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(sx,sy+oy+4,36,5);
+    ctx.font='13px serif';ctx.fillText('📚',sx+6,sy+oy+16);
+  }else if(style==='desk'){
+    // Clean orange desk
+    ctx.fillStyle='#3a2000';ctx.fillRect(sx-2,sy+oy+20,38,12);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy,38,22);
+    ctx.fillStyle=sa;ctx.fillRect(sx-2,sy+oy,38,6);
+    ctx.fillStyle='rgba(255,255,255,0.18)';ctx.fillRect(sx,sy+oy+7,34,5);
+    ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(sx+8,sy+oy+12,20,6);// monitor
+    ctx.fillStyle=sa;ctx.fillRect(sx+9,sy+oy+13,18,4);
+    ctx.font='11px serif';ctx.fillText('🧑‍💻',sx+4,sy+oy+16);
+  }else if(style==='torii'){
+    // Red torii gate style
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy-6,44,8);// top bar
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-12,8,38);// left post
+    ctx.fillStyle=sc;ctx.fillRect(sx+30,sy+oy-12,8,38);// right post
+    ctx.fillStyle=sa;ctx.fillRect(sx-4,sy+oy,44,4);// bottom bar
+    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(sx+8,sy+oy,20,20);// fill
+    ctx.font='13px serif';ctx.fillText('⛩️',sx+6,sy+oy+16);
+  }else if(style==='counter'){
+    // Pink boutique counter
+    ctx.fillStyle='#4a1030';ctx.fillRect(sx-2,sy+oy+18,38,12);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy,38,20);
+    ctx.fillStyle=sa;ctx.fillRect(sx-2,sy+oy,38,5);
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(sx,sy+oy+6,34,4);
+    // Heart emblem
+    ctx.fillStyle=sa;ctx.font='14px serif';ctx.fillText('🌸',sx+5,sy+oy+16);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy+20,38,10);
+    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(sx,sy+oy+21,34,3);
+  }else if(style==='kiosk'){
+    // Tech kiosk with screen
+    ctx.fillStyle='#201010';ctx.fillRect(sx-4,sy+oy-4,44,32);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-2,40,28);
+    ctx.fillStyle='#101010';ctx.fillRect(sx+2,sy+oy+2,32,14);// screen
+    ctx.fillStyle=`rgba(${parseInt(sa.slice(1,3),16)},${parseInt(sa.slice(3,5),16)},${parseInt(sa.slice(5,7),16)},${0.3+0.2*Math.sin(f*0.05)})`;
+    ctx.fillRect(sx+3,sy+oy+3,30,12);
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='8px "Press Start 2P"';
+    ctx.fillText('ADOBE',sx+3,sy+oy+12);
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy+26,44,10);
+  }else if(style==='tower'){
+    // Tall tower / column
+    ctx.fillStyle='#1a0830';ctx.fillRect(sx+2,sy+oy+20,28,14);
+    for(let i=0;i<5;i++){ctx.fillStyle=i%2===0?sc:sa;ctx.fillRect(sx,sy+oy+i*4,32,4);}
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy-8,40,12);
+    ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(sx-2,sy+oy-6,36,4);
+    ctx.font='13px serif';ctx.fillText('📊',sx+4,sy+oy+4);
+  }else if(style==='panel'){
+    // Teal flat panel tech station
+    ctx.fillStyle='#0a2830';ctx.fillRect(sx-4,sy+oy-4,44,34);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-2,40,30);
+    ctx.fillStyle='#050e14';ctx.fillRect(sx+2,sy+oy+4,32,12);
+    // Animated scan lines
+    const scan=(f*2)%14;
+    ctx.fillStyle=`rgba(${parseInt(sa.slice(1,3),16)},${parseInt(sa.slice(3,5),16)},${parseInt(sa.slice(5,7),16)},0.4)`;
+    ctx.fillRect(sx+2,sy+oy+4+scan,32,2);
+    ctx.fillStyle=sa;ctx.font='5px "Press Start 2P"';ctx.fillText('DATAFIN',sx+3,sy+oy+22);
+  }else if(style==='vault'){
+    // Green bank vault
+    ctx.fillStyle='#0a2010';ctx.fillRect(sx-4,sy+oy-4,44,34);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy,40,24);
+    // Vault door circle
+    ctx.strokeStyle=sa;ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx+18,sy+oy+12,10,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#0a2010';ctx.beginPath();ctx.arc(sx+18,sy+oy+12,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=sa;ctx.font='8px serif';ctx.fillText('$',sx+15,sy+oy+16);
+    // Handle
+    ctx.strokeStyle=sa;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx+28,sy+oy+10);ctx.lineTo(sx+32,sy+oy+14);ctx.stroke();
+  }else if(style==='trophy'){
+    // Gold trophy pedestal
+    ctx.fillStyle='#3a2800';ctx.fillRect(sx,sy+oy+22,32,10);
+    ctx.fillStyle=sc;ctx.fillRect(sx+4,sy+oy+14,24,10);
+    ctx.fillStyle=sa;
+    ctx.beginPath();ctx.moveTo(sx+8,sy+oy);ctx.lineTo(sx+24,sy+oy);ctx.lineTo(sx+28,sy+oy+14);ctx.lineTo(sx+4,sy+oy+14);ctx.closePath();ctx.fill();
+    // Trophy cup
+    ctx.fillStyle=sa;ctx.font='14px serif';ctx.fillText('🏆',sx+4,sy+oy+12);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(sx+9,sy+oy+2,8,4);
+  }else if(style==='bench'){
+    // Sports bench
+    ctx.fillStyle='#0a2010';ctx.fillRect(sx+2,sy+oy+20,28,4);ctx.fillRect(sx+4,sy+oy+24,24,8);
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy,40,22);
+    ctx.fillStyle=sa;ctx.fillRect(sx-4,sy+oy,40,5);
+    // Field lines
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(sx+8,sy+oy+7,24,1);ctx.fillRect(sx+8,sy+oy+13,24,1);
+    ctx.fillStyle=sa;ctx.font='13px serif';ctx.fillText('⚽',sx+5,sy+oy+18);
+  }else if(style==='podium'){
+    // Gold podium
+    ctx.fillStyle='#2a1800';ctx.fillRect(sx+2,sy+oy+22,28,12);
+    ctx.fillStyle='#3a2200';ctx.fillRect(sx,sy+oy+16,32,8);
+    ctx.fillStyle=sc;ctx.fillRect(sx-4,sy+oy,40,18);
+    ctx.fillStyle=sa;ctx.fillRect(sx-4,sy+oy,40,5);
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(sx-2,sy+oy+6,36,4);
+    ctx.font='13px serif';ctx.fillText('👥',sx+4,sy+oy+16);
+  }else if(style==='console'){
+    // Teal sci-fi console
+    ctx.fillStyle='#051818';ctx.fillRect(sx-4,sy+oy-6,44,36);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-4,40,32);
+    // Buttons
+    const btns=[[4,8],[12,8],[20,8],[28,8],[4,16],[12,16],[20,16],[28,16]];
+    btns.forEach(([bx,by],i)=>{
+      ctx.fillStyle=i%3===0?sa:`rgba(${parseInt(sa.slice(1,3),16)},${parseInt(sa.slice(3,5),16)},${parseInt(sa.slice(5,7),16)},0.4)`;
+      ctx.fillRect(sx+bx,sy+oy-4+by,6,6);
+    });
+    ctx.fillStyle=sa;ctx.font='5px "Press Start 2P"';ctx.fillText('STRAT',sx,sy+oy+22);
+  }else if(style==='screen'){
+    // Blue display screen
+    ctx.fillStyle='#050a30';ctx.fillRect(sx-4,sy+oy-8,44,36);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-6,40,32);
+    ctx.fillStyle='#020510';ctx.fillRect(sx+2,sy+oy-2,32,16);
+    // Screen content
+    const bars=[[0,4,sa],[0,7,sa+'80'],[0,10,'rgba(100,150,255,0.4)'],[0,13,'rgba(100,150,255,0.2)']];
+    bars.forEach(([,by,col])=>{ctx.fillStyle=col;const w=16+Math.random()*16;ctx.fillRect(sx+4,sy+oy-2+by,Math.floor(w),2);});
+    ctx.fillStyle=sa;ctx.font='5px "Press Start 2P"';ctx.fillText('GTM',sx+4,sy+oy+22);
+  }else if(style==='rocket'){
+    // Rocket stand
+    ctx.fillStyle='#180830';ctx.fillRect(sx+2,sy+oy+20,28,12);
+    ctx.fillStyle=sc;
+    ctx.beginPath();ctx.moveTo(sx+16,sy+oy-8);ctx.lineTo(sx+32,sy+oy+20);ctx.lineTo(sx,sy+oy+20);ctx.closePath();ctx.fill();
+    ctx.fillStyle=sa;ctx.fillRect(sx+8,sy+oy,16,10);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(sx+12,sy+oy+2,8,5);
+    // Exhaust
+    const exPulse=0.4+0.4*Math.sin(f*0.12);
+    ctx.fillStyle=`rgba(255,160,0,${exPulse})`;ctx.fillRect(sx+8,sy+oy+20,6,4);
+    ctx.fillStyle=`rgba(255,80,0,${exPulse})`;ctx.fillRect(sx+18,sy+oy+20,6,4);
+    ctx.font='12px serif';ctx.fillText('🚀',sx+4,sy+oy+14);
+  }else if(style==='mailbox'){
+    // Red mailbox
+    ctx.fillStyle='#500010';ctx.fillRect(sx+8,sy+oy+20,16,12);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy,36,22);
+    ctx.fillStyle=sa;ctx.beginPath();ctx.moveTo(sx-2,sy+oy);ctx.lineTo(sx+18,sy+oy-8);ctx.lineTo(sx+34,sy+oy);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#101010';ctx.fillRect(sx+4,sy+oy+8,28,6);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.fillRect(sx+5,sy+oy+9,26,2);
+    ctx.font='12px serif';ctx.fillText('📬',sx+4,sy+oy+6);
+  }else if(style==='gate'){
+    // Gold gate / arch
+    ctx.fillStyle='#3a2800';ctx.fillRect(sx-4,sy+oy-10,44,42);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy-8,40,38);
+    ctx.fillStyle=sa;ctx.fillRect(sx-2,sy+oy-8,40,6);ctx.fillRect(sx-2,sy+oy+24,40,6);
+    // Gate bars
+    for(let i=0;i<5;i++){ctx.fillStyle=sa;ctx.fillRect(sx-2+i*9,sy+oy-2,5,28);}
+    ctx.font='11px serif';ctx.fillText('🌟',sx+4,sy+oy+18);
+    const gp=0.4+0.4*Math.sin(f*0.08);
+    ctx.fillStyle=`rgba(248,232,0,${gp*0.15})`;ctx.fillRect(sx-2,sy+oy-8,40,38);
+  }else{
+    // Default fallback stand
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy,36,20);
+    ctx.fillStyle=sa;ctx.fillRect(sx-2,sy+oy,36,5);
+    ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(sx,sy+oy+6,32,5);
+    ctx.fillStyle=sc;ctx.fillRect(sx-2,sy+oy+20,36,10);
+    ctx.font='12px serif';ctx.fillText(n.emoji||'★',sx+4,sy+oy+16);
+  }
+}
+
+function drawBoatNPC(n,sx,sy,f){
+  const bob=Math.sin(f*0.05+n.x)*2;
+  const sc=n.standColor,sa=n.standAccent;
+  // Water waves under boat
+  ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(sx-8,sy+28,52,6);
+  // Boat hull
+  ctx.fillStyle=sc;
+  ctx.beginPath();ctx.moveTo(sx-6,sy+20+bob);ctx.lineTo(sx+42,sy+20+bob);
+  ctx.lineTo(sx+38,sy+34+bob);ctx.lineTo(sx-2,sy+34+bob);ctx.closePath();ctx.fill();
+  ctx.fillStyle=sa;ctx.fillRect(sx-6,sy+18+bob,48,4);
+  // Sail / awning
+  ctx.fillStyle=sa;
+  ctx.beginPath();ctx.moveTo(sx+10,sy+18+bob);ctx.lineTo(sx+10,sy-4+bob);
+  ctx.lineTo(sx+32,sy+4+bob);ctx.lineTo(sx+32,sy+18+bob);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(sx+11,sy+2+bob,8,6);
+  // Mast
+  ctx.fillStyle='#7a4010';ctx.fillRect(sx+18,sy-8+bob,3,28);
+  // Flag
+  const fp=0.4+0.4*Math.sin(f*0.1);
+  ctx.fillStyle=`rgba(${parseInt(sa.slice(1,3),16)},${parseInt(sa.slice(3,5),16)},${parseInt(sa.slice(5,7),16)},${fp})`;
+  ctx.fillRect(sx+21,sy-8+bob,10,7);
+  // Character in boat
+  const cxb=sx+12,cyb=sy-2+bob;
+  ctx.fillStyle=n.charColor;ctx.fillRect(cxb+2,cyb+12,16,12);
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(cxb+7,cyb+12,5,4);
+  ctx.fillStyle=n.charHead||P.head;ctx.fillRect(cxb+3,cyb+2,14,12);
+  ctx.fillStyle=n.charColor;ctx.fillRect(cxb+3,cyb+2,14,4);
+  ctx.fillStyle=P.eye;ctx.fillRect(cxb+6,cyb+8,3,3);ctx.fillRect(cxb+12,cyb+8,3,3);
+  // Paddle
+  ctx.fillStyle='#7a4010';ctx.fillRect(cxb+18,cyb+14,4,18);
+  ctx.fillStyle=n.standAccent;ctx.fillRect(cxb+16,cyb+28,8,5);
+  // Star indicator
+  if(!n.talked){
+    const pulse=0.5+0.5*Math.abs(Math.sin(f*0.12));
+    ctx.fillStyle=`rgba(255,232,50,${0.7+pulse*0.3})`;
+    ctx.font='11px serif';ctx.fillText('★',sx+36,sy+6+bob);
+  }else{
+    ctx.fillStyle='rgba(80,255,120,0.8)';ctx.font='11px serif';ctx.fillText('✓',sx+36,sy+6+bob);
+  }
+  // Ripple around boat
+  ctx.strokeStyle=`rgba(60,120,220,${0.3+0.2*Math.sin(f*0.04)})`;
+  ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(sx+18,sy+36+bob,26,5,0,0,Math.PI*2);ctx.stroke();
+}
+
+// ── DRAW PLAYER ─────────────────────────────────────────────────
+function drawPlayer(){
+  const p=state.player;
+  const sx=Math.round(p.x*TILE-state.cam.x),sy=Math.round(p.y*TILE-state.cam.y);
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.28)';ctx.fillRect(sx+4,sy+28,24,5);
+  // Shoes
+  ctx.fillStyle='#101010';ctx.fillRect(sx+7,sy+29,9,4);ctx.fillRect(sx+18,sy+29,9,4);
+  // Pants
+  ctx.fillStyle='#1a2888';
+  ctx.fillRect(sx+9,sy+22,7,8);ctx.fillRect(sx+18,sy+22,7,8);
+  if(p.moving){
+    if(p.frame%2===0){ctx.fillRect(sx+9,sy+20,7,9);ctx.fillRect(sx+18,sy+24,7,7);}
+    else{ctx.fillRect(sx+9,sy+24,7,7);ctx.fillRect(sx+18,sy+20,7,9);}
+  }
+  // Body (custom outfit color)
+  ctx.fillStyle=playerOutfitColor;ctx.fillRect(sx+6,sy+12,20,12);
+  // Collar
+  ctx.fillStyle='#fff';ctx.fillRect(sx+12,sy+12,8,5);
+  // Head
+  ctx.fillStyle=P.head;ctx.fillRect(sx+7,sy+3,18,12);
+  // Hair (custom color)
+  ctx.fillStyle=playerHairColor;ctx.fillRect(sx+7,sy+3,18,5);
+  // Eyes
+  ctx.fillStyle=P.eye;
+  if(p.dir===0){ctx.fillRect(sx+10,sy+8,3,3);ctx.fillRect(sx+20,sy+8,3,3);}
+  else if(p.dir===1){ctx.fillRect(sx+19,sy+8,3,3);ctx.fillRect(sx+23,sy+10,2,2);}
+  else if(p.dir===2){ctx.fillRect(sx+10,sy+11,3,3);ctx.fillRect(sx+20,sy+11,3,3);}
+  else{ctx.fillRect(sx+8,sy+8,3,3);ctx.fillRect(sx+5,sy+10,2,2);}
+  // Name tag (custom name)
+  const displayName=playerName.toUpperCase();
+  const nameW=Math.max(64,displayName.length*7+12);
+  ctx.fillStyle='rgba(0,0,0,0.8)';ctx.fillRect(sx+16-nameW/2,sy-20,nameW,14);
+  ctx.strokeStyle='rgba(248,232,0,0.5)';ctx.lineWidth=1;ctx.strokeRect(sx+16-nameW/2,sy-20,nameW,14);
+  ctx.fillStyle='#f8e800';ctx.font='5px "Press Start 2P"';
+  ctx.textAlign='center';ctx.fillText(displayName,sx+16,sy-9);ctx.textAlign='left';
+}
+
+// ── HUD / TYPING / LOOP ──────────────────────────────────────────
+function updateZone(){
+  const px=Math.floor(state.player.x),py=Math.floor(state.player.y);
+  for(const z of ZONES){if(px>=z.x1&&px<=z.x2&&py>=z.y1&&py<=z.y2){document.getElementById('zone-label').textContent=z.name;break;}}
+}
+let typInt=0;
+function updateTyping(dt){
+  if(!state.typDone&&state.dlg.active){
+    typInt+=dt;if(typInt>18){typInt=0;
+      if(state.typIdx<state.typTarget.length){
+        state.typIdx++;document.getElementById('dlg-txt').textContent=state.typTarget.substring(0,state.typIdx);
+      }else state.typDone=true;
+    }
+  }
+}
+let lastT=0;
+function loop(ts){
+  if(!state.started)return;
+  const dt=ts-lastT;lastT=ts;state.fc++;
+  updateTyping(dt);updatePlayer();updateCam();updateZone();
+  ctx.fillStyle='#06061a';ctx.fillRect(0,0,canvas.width,canvas.height);
+  const stx=Math.max(0,Math.floor(state.cam.x/TILE)-1);
+  const sty=Math.max(0,Math.floor(state.cam.y/TILE)-1);
+  const etx=Math.min(MAP_W-1,stx+19);
+  const ety=Math.min(MAP_H-1,sty+15);
+  // Draw tiles
+  for(let ty=sty;ty<=ety;ty++)for(let tx=stx;tx<=etx;tx++)drawTile(tx,ty);
+  // Draw CTA gate
+  drawCTAGate();
+  // Draw NPCs (sorted by y for depth)
+  const sorted=[...NPCS].sort((a,b)=>a.y-b.y);
+  for(const n of sorted)drawNPC(n);
+  // Draw player
+  drawPlayer();
+  // Update progress
+  updateProgress();
+  // Draw minimap
+  drawMinimap();
+  requestAnimationFrame(loop);
+}
+
+// ── PROGRESS TRACKER ──────────────────────────────────────────────
+function updateProgress(){
+  const talked=NPCS.filter(n=>n.talked).length;
+  const total=NPCS.length;
+  const pct=Math.round(talked/total*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  const lockInfo=ctaUnlocked?'':'  🔒 '+CTA_UNLOCK_THRESHOLD+' to unlock';
+  document.getElementById('prog-pct').textContent=talked+'/'+total+lockInfo;
+}
+
+// ── MINIMAP ──────────────────────────────────────────────────────
+let mmVisible=false;
+const mmCanvas=document.getElementById('minimap');
+const mmCtx=mmCanvas.getContext('2d');
+mmCtx.imageSmoothingEnabled=false;
+
+function toggleMinimap(){
+  mmVisible=!mmVisible;
+  mmCanvas.classList.toggle('hidden',!mmVisible);
+  document.getElementById('mm-toggle').textContent=mmVisible?'✕ MAP':'🗺 MAP';
+}
+
+function drawMinimap(){
+  if(!mmVisible)return;
+  const s=mmCtx,w=108,h=90;
+  const sx=3,sy=3;// scale: each tile = 3px
+  s.fillStyle='#06061a';s.fillRect(0,0,w,h);
+  for(let ty=0;ty<MAP_H;ty++)for(let tx=0;tx<MAP_W;tx++){
+    const t=rawMap[ty][tx];
+    let c='#2a3a20';
+    if(t===T.ROAD)c='#333';
+    else if(t===T.WATER)c='#2058c0';
+    else if(t===T.TREE)c='#105828';
+    else if(t===T.SAND)c='#c8b060';
+    else if(t===T.WELCOME)c='#507030';
+    else if(t===T.CTA)c='#180c30';
+    else if(t===T.KIOSK)c='#f8e800';
+    else if(t===T.FLOWER)c='#e050a0';
+    else if(t===T.BRIDGE)c='#b08828';
+    else if(t===T.SOCCER)c='#fff';
+    else if(t===T.BARRIER)c=ctaUnlocked?'#333':'#a03030';
+    s.fillStyle=c;s.fillRect(tx*sx,ty*sy,sx,sy);
+  }
+  // NPCs
+  for(const n of NPCS){
+    s.fillStyle=n.talked?'#40e060':'#f8e800';
+    s.fillRect(Math.floor(n.x)*sx,Math.floor(n.y)*sy,sx,sy);
+  }
+  // Player blink
+  const blink=state.fc%20<14;
+  if(blink){
+    s.fillStyle='#ff3030';
+    s.fillRect(Math.floor(state.player.x)*sx-1,Math.floor(state.player.y)*sy-1,sx+2,sy+2);
+  }
+  // Camera viewport box
+  const vx=state.cam.x/TILE*sx,vy=state.cam.y/TILE*sy;
+  const vw=(canvas.width/TILE)*sx,vh=(canvas.height/TILE)*sy;
+  s.strokeStyle='rgba(255,255,255,0.5)';s.lineWidth=1;s.strokeRect(vx,vy,vw,vh);
+}
+
+// ── MOBILE D-PAD ─────────────────────────────────────────────────
+function setupDpad(){
+  const dirs={
+    'dpad-up':['ArrowUp'],
+    'dpad-down':['ArrowDown'],
+    'dpad-left':['ArrowLeft'],
+    'dpad-right':['ArrowRight']
+  };
+  for(const[id,keys]of Object.entries(dirs)){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    const start=()=>{keys.forEach(k=>state.keys[k]=true);};
+    const stop=()=>{keys.forEach(k=>state.keys[k]=false);};
+    el.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false});
+    el.addEventListener('touchend',e=>{e.preventDefault();stop();},{passive:false});
+    el.addEventListener('touchcancel',stop);
+    el.addEventListener('mousedown',start);
+    el.addEventListener('mouseup',stop);
+    el.addEventListener('mouseleave',stop);
+  }
+  const act=document.getElementById('dpad-action');
+  if(act){
+    act.addEventListener('touchstart',e=>{
+      e.preventDefault();
+      if(state.dlg.active)advDlg();
+      else if(state.sgn.active)closeSgn();
+      else interact();
+    },{passive:false});
+    act.addEventListener('click',()=>{
+      if(state.dlg.active)advDlg();
+      else if(state.sgn.active)closeSgn();
+      else interact();
+    });
+  }
+}
+setupDpad();
+
+// ── TITLE SCREEN PARTICLES ──────────────────────────────────────
+const pCanvas=document.getElementById('particles');
+const pCtx=pCanvas.getContext('2d');
+let particles=[];
+function resizeParticles(){pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;}
+resizeParticles();window.addEventListener('resize',resizeParticles);
+
+for(let i=0;i<40;i++){
+  particles.push({
+    x:Math.random()*window.innerWidth,
+    y:Math.random()*window.innerHeight,
+    vx:(Math.random()-0.5)*0.3,
+    vy:-0.2-Math.random()*0.4,
+    size:1+Math.random()*2,
+    alpha:0.2+Math.random()*0.4,
+    color:Math.random()>0.5?'#f8e800':'#78c8f8'
+  });
+}
+
+function animParticles(){
+  requestAnimationFrame(animParticles);
+  if(state.started){pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);return;}
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  for(const p of particles){
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.y<-10){p.y=pCanvas.height+10;p.x=Math.random()*pCanvas.width;}
+    if(p.x<-10)p.x=pCanvas.width+10;
+    if(p.x>pCanvas.width+10)p.x=-10;
+    pCtx.fillStyle=p.color.replace(')',`,${p.alpha})`).replace('rgb','rgba').replace('#','');
+    pCtx.globalAlpha=p.alpha;
+    pCtx.fillStyle=p.color;
+    pCtx.fillRect(p.x,p.y,p.size,p.size);
+  }
+  pCtx.globalAlpha=1;
+}
+animParticles();
+
+// ── AUDIO SYSTEM (Web Audio API) ─────────────────────────────────
+let audioCtx=null,audioEnabled=false;
+function toggleAudio(){
+  audioEnabled=!audioEnabled;
+  document.getElementById('audio-toggle').textContent=audioEnabled?'🔊 SFX':'🔇 SFX';
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+}
+
+function playTone(freq,dur,type,vol){
+  if(!audioEnabled||!audioCtx)return;
+  try{
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type=type||'square';
+    osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol||0.06,audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+(dur||0.1));
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    osc.start();osc.stop(audioCtx.currentTime+(dur||0.1));
+  }catch(e){}
+}
+
+// Hook audio into interactions
+const origOpenDlg=openDlg;
+openDlg=function(n){origOpenDlg(n);playTone(520,0.08,'square',0.05);playTone(700,0.06,'square',0.04);};
+const origOpenSgn=openSgn;
+openSgn=function(d){origOpenSgn(d);playTone(440,0.06,'triangle',0.04);};
+const origAdvDlg2=advDlg;
+advDlg=function(){origAdvDlg2();playTone(380,0.04,'square',0.03);};
+
+// Show audio button after game starts
+const origActualStart=actuallyStartGame;
+actuallyStartGame=function(){
+  origActualStart();
+  document.getElementById('audio-toggle').style.display='block';
+  // Init audio context on first interaction
+  if(!audioCtx){
+    try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();audioEnabled=true;
+    document.getElementById('audio-toggle').textContent='🔊 SFX';}catch(e){}
+  }
+};
+
+</script>
+</body>
+</html>
